@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using PCDiagnosticPro.Models;
 
@@ -93,7 +94,7 @@ namespace PCDiagnosticPro.Services
                     return result;
                 }
 
-                result.RawReport = File.ReadAllText(filePath);
+                result.RawReport = ReadReportText(filePath);
                 result.IsValid = true;
 
                 // Parser les différentes sections
@@ -119,6 +120,20 @@ namespace PCDiagnosticPro.Services
             }
 
             return result;
+        }
+
+        private static string ReadReportText(string filePath)
+        {
+            var bytes = File.ReadAllBytes(filePath);
+            var utf8Text = Encoding.UTF8.GetString(bytes);
+
+            if (!utf8Text.Contains('\uFFFD'))
+            {
+                return utf8Text;
+            }
+
+            var windows1252 = Encoding.GetEncoding(1252);
+            return windows1252.GetString(bytes);
         }
 
         private void ParseSystemInfo(ScanResult result)
