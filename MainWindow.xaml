@@ -1,0 +1,613 @@
+<Window x:Class="PCDiagnosticPro.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PCDiagnosticPro.ViewModels"
+        xmlns:conv="clr-namespace:PCDiagnosticPro.Converters"
+        mc:Ignorable="d"
+        Title="PC Diagnostic Pro" 
+        Height="800" Width="1100"
+        MinHeight="700" MinWidth="900"
+        Background="{StaticResource BackgroundDarkBrush}"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <conv:StatusToColorConverter x:Key="StatusToColor"/>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <conv:GradeToColorConverter x:Key="GradeToColor"/>
+        <conv:InverseBoolConverter x:Key="InverseBool"/>
+        <conv:ProgressToBlurConverter x:Key="ProgressToBlur"/>
+        <conv:ProgressToOpacityConverter x:Key="ProgressToOpacity"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- BARRE LATERALE GAUCHE -->
+        <Border Grid.Column="0" Background="{StaticResource BackgroundMediumBrush}" 
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+            <StackPanel VerticalAlignment="Top" Margin="0,20,0,0">
+                
+                <!-- Logo -->
+                <Border Width="50" Height="50" CornerRadius="25" 
+                        Background="{StaticResource AccentRedBrush}" Margin="0,0,0,30"
+                        HorizontalAlignment="Center">
+                    <TextBlock Text="⚡" FontSize="24" HorizontalAlignment="Center" 
+                               VerticalAlignment="Center" Foreground="White"/>
+                </Border>
+
+                <!-- Bouton Accueil -->
+                <Button Width="50" Height="50" Margin="0,5" Padding="0" 
+                        ToolTip="Tableau de bord" Cursor="Hand"
+                        Command="{Binding NavigateToScannerCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FuturisticButton}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsScannerView}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource AccentRedBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <TextBlock Text="🏠" FontSize="20"/>
+                </Button>
+
+                <!-- Bouton Scan -->
+                <Button Width="50" Height="50" Margin="0,5" Padding="0" 
+                        ToolTip="Scan Healthcheck" Cursor="Hand"
+                        Command="{Binding NavigateToHealthcheckCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FuturisticButton}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsHealthcheckView}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource AccentRedBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <TextBlock Text="🔍" FontSize="20"/>
+                </Button>
+                
+                <!-- Bouton Rapports -->
+                <Button Width="50" Height="50" Margin="0,5" Padding="0" 
+                        ToolTip="Rapports" Cursor="Hand"
+                        Command="{Binding NavigateToResultsCommand}"
+                        IsEnabled="{Binding HasAnyScan}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FuturisticButton}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+                            <Setter Property="Opacity" Value="0.4"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsResultsView}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource AccentRedBrush}"/>
+                                    <Setter Property="Opacity" Value="1"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding HasAnyScan}" Value="True">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <TextBlock Text="📊" FontSize="20"/>
+                </Button>
+                
+                <!-- Bouton Parametres -->
+                <Button Width="50" Height="50" Margin="0,5" Padding="0" 
+                        ToolTip="Paramètres" Cursor="Hand"
+                        Command="{Binding NavigateToSettingsCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource FuturisticButton}">
+                            <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSettingsView}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource AccentRedBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <TextBlock Text="⚙️" FontSize="20"/>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- ZONE PRINCIPALE -->
+        <Grid Grid.Column="1" Margin="30">
+            
+            <!-- VUE HOME -->
+            <Grid Visibility="{Binding IsScannerView, Converter={StaticResource BoolToVisibility}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,0,0,40">
+                    <TextBlock Text="PC Diagnostic Pro" FontSize="32" FontWeight="Bold" 
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Outil de diagnostic système professionnel" FontSize="16" 
+                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,10,0,0"/>
+                </StackPanel>
+
+                <UniformGrid Grid.Row="1" Columns="2">
+                    <!-- Carte Scan -->
+                    <Border Margin="15" Cursor="Hand" Style="{StaticResource CardStyle}">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToHealthcheckCommand}"/>
+                        </Border.InputBindings>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="40">
+                            <TextBlock Text="⚡" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                            <TextBlock Text="Scan et Fix" FontSize="28" FontWeight="Bold" 
+                                       Foreground="{StaticResource TextPrimaryBrush}" 
+                                       HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                            <TextBlock Text="Analysez votre PC et corrigez les problèmes" 
+                                       FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Carte Chat -->
+                    <Border Margin="15" Cursor="Hand" Style="{StaticResource CardStyle}">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToChatCommand}"/>
+                        </Border.InputBindings>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="40">
+                            <TextBlock Text="🤖" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                            <TextBlock Text="Chat et Support" FontSize="28" FontWeight="Bold" 
+                                       Foreground="{StaticResource TextPrimaryBrush}" 
+                                       HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                            <TextBlock Text="Discutez avec l'IA pour résoudre vos problèmes" 
+                                       FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </Grid>
+
+            <!-- VUE HEALTHCHECK -->
+            <Grid Visibility="{Binding IsHealthcheckView, Converter={StaticResource BoolToVisibility}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Bouton central -->
+                <Grid Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid HorizontalAlignment="Center">
+                        <Ellipse Width="260" Height="260" 
+                                 Stroke="{StaticResource BackgroundLightBrush}" 
+                                 StrokeThickness="8"/>
+                        
+                        <Ellipse Width="260" Height="260" StrokeThickness="3"
+                                 Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}"
+                                 RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.Stroke>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="{StaticResource AccentRed}" Offset="0"/>
+                                    <GradientStop Color="Transparent" Offset="0.5"/>
+                                    <GradientStop Color="{StaticResource AccentRed}" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Ellipse.Stroke>
+                            <Ellipse.RenderTransform>
+                                <RotateTransform/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                           From="0" To="360" Duration="0:0:1.5"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+
+                        <Button Width="220" Height="220" 
+                                Command="{Binding StartScanCommand}"
+                                IsEnabled="{Binding CanStartScan}"
+                                Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid>
+                                        <Ellipse x:Name="ButtonBackground">
+                                            <Ellipse.Fill>
+                                                <RadialGradientBrush GradientOrigin="0.3,0.3">
+                                                    <GradientStop Color="#FF2D333B" Offset="0"/>
+                                                    <GradientStop Color="#FF161B22" Offset="1"/>
+                                                </RadialGradientBrush>
+                                            </Ellipse.Fill>
+                                            <Ellipse.Effect>
+                                                <DropShadowEffect Color="{StaticResource AccentRed}" 
+                                                                  BlurRadius="30" ShadowDepth="0" Opacity="0.5"/>
+                                            </Ellipse.Effect>
+                                        </Ellipse>
+                                        
+                                        <Ellipse Stroke="{StaticResource AccentRedBrush}" 
+                                                 StrokeThickness="2" Margin="10"/>
+                                        
+                                        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <StackPanel Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="ANALYSER" FontSize="22" FontWeight="Bold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Cliquez pour démarrer" FontSize="10"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="{Binding Progress, StringFormat={}{0}%}" 
+                                                           FontSize="42" FontWeight="Bold"
+                                                           Foreground="{StaticResource AccentRedBrush}"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentStep}" 
+                                                           FontSize="10" Margin="0,5,0,10"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxWidth="160" TextAlignment="Center"/>
+                                                <Button Content="⏹" Width="40" Height="40"
+                                                        FontSize="16" Padding="0"
+                                                        Style="{StaticResource FuturisticButton}"
+                                                        Command="{Binding CancelScanCommand}"
+                                                        ToolTip="Annuler le scan"/>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVisibility}}"
+                                                        HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding ScoreDisplay}" 
+                                                           FontSize="48" FontWeight="Bold"
+                                                           Foreground="{Binding GradeDisplay, Converter={StaticResource GradeToColor}}"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="/100" FontSize="14"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           HorizontalAlignment="Center" Margin="0,-5,0,5"/>
+                                                <Border CornerRadius="4" Padding="12,4"
+                                                        Background="{Binding GradeDisplay, Converter={StaticResource GradeToColor}}"
+                                                        HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding GradeDisplay}" 
+                                                               FontSize="18" FontWeight="Bold"
+                                                               Foreground="White"/>
+                                                </Border>
+                                            </StackPanel>
+                                            
+                                            <StackPanel Visibility="{Binding IsError, Converter={StaticResource BoolToVisibility}}"
+                                                        HorizontalAlignment="Center">
+                                                <TextBlock Text="❌" FontSize="48" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Erreur" FontSize="14"
+                                                           Foreground="{StaticResource AccentRedBrush}"
+                                                           HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Grid>
+                                    
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ButtonBackground" Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect Color="{StaticResource AccentRed}" 
+                                                                      BlurRadius="50" ShadowDepth="0" Opacity="0.8"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Grid>
+
+                <!-- Panneau lateral droit -->
+                <Border Grid.Column="1" Background="{StaticResource BackgroundMediumBrush}" 
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0"
+                        Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="📊 Progression" FontSize="18" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,20"/>
+                        
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Temps écoulé" FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding ElapsedTime}" FontSize="24" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentRedBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Configurations scannées" FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding ProgressCount}" FontSize="24" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentRedBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Section courante" FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding CurrentSection}" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource PanelBorder}" Height="150">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                
+                                <TextBlock Grid.Row="0" Text="📡 Live Feed" FontWeight="Bold" FontSize="12"
+                                           Foreground="{StaticResource AccentRedBrush}" Margin="0,0,0,8"/>
+                                
+                                <ListBox Grid.Row="1" ItemsSource="{Binding LiveFeedItems}"
+                                         Background="Transparent" BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas" FontSize="10">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                            <Setter Property="Padding" Value="0,1"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0"
+                                    Visibility="{Binding ShowScanButtons, Converter={StaticResource BoolToVisibility}}">
+                            <Button Content="📄 Rapport" Style="{StaticResource FuturisticButton}"
+                                    Command="{Binding OpenReportCommand}" Margin="0,0,10,0"/>
+                            <Button Content="💾 Exporter" Style="{StaticResource FuturisticButton}"
+                                    Command="{Binding ExportResultsCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- VUE CHAT -->
+            <Grid Visibility="{Binding IsChatView, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="💬" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                    <TextBlock Text="Chat et Support" FontSize="28" FontWeight="Bold" 
+                               Foreground="{StaticResource TextPrimaryBrush}" 
+                               HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                    <TextBlock Text="Cette fonctionnalité sera disponible prochainement" 
+                               FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- VUE RESULTATS -->
+            <Grid Visibility="{Binding IsResultsView, Converter={StaticResource BoolToVisibility}}">
+                
+                <Grid Visibility="{Binding IsViewingHistoryDetail, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="📊 Historique des scans" FontSize="24" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,20"/>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ScanHistory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Cursor="Hand">
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" 
+                                                          Command="{Binding DataContext.SelectHistoryScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}"/>
+                                        </Border.InputBindings>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Width="60" Height="60" CornerRadius="8"
+                                                    Background="{Binding Grade, Converter={StaticResource GradeToColor}}"
+                                                    Margin="0,0,15,0">
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Score}" FontSize="20" FontWeight="Bold"
+                                                               Foreground="White" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Grade}" FontSize="12"
+                                                               Foreground="White" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding DateDisplay}" FontSize="16" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                <TextBlock Text="{Binding ScoreDisplay}" FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="2" Text="→" FontSize="24"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <Grid Visibility="{Binding IsViewingHistoryDetail, Converter={StaticResource BoolToVisibility}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                        <TextBlock Text="📊 Résultats du diagnostic" FontSize="24" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock Text="{Binding SelectedHistoryScan.DateDisplay, StringFormat='Scan du {0}'}" 
+                                   FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,20">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding ScanResult.Summary.Score}" FontSize="48" FontWeight="Bold"
+                                               Foreground="{Binding ScanResult.Summary.Grade, Converter={StaticResource GradeToColor}}"/>
+                                    <TextBlock Text="/100" FontSize="24" VerticalAlignment="Bottom" Margin="5,0,20,10"
+                                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Border CornerRadius="8" Padding="20,10"
+                                            Background="{Binding ScanResult.Summary.Grade, Converter={StaticResource GradeToColor}}"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ScanResult.Summary.Grade}" FontSize="24" FontWeight="Bold"
+                                                   Foreground="White"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="Détail des éléments analysés" FontWeight="Bold" FontSize="16"
+                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                            
+                            <DataGrid ItemsSource="{Binding ScanItems}"
+                                      AutoGenerateColumns="False" IsReadOnly="True"
+                                      CanUserAddRows="False" CanUserDeleteRows="False"
+                                      GridLinesVisibility="None" HeadersVisibility="Column"
+                                      MaxHeight="400">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Catégorie" Binding="{Binding Category}" Width="120"/>
+                                    <DataGridTextColumn Header="Élément" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTemplateColumn Header="Niveau" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="4" Padding="6,3" HorizontalAlignment="Left"
+                                                        Background="{Binding Severity, Converter={StaticResource StatusToColor}}">
+                                                    <TextBlock Text="{Binding SeverityText}" FontWeight="SemiBold"
+                                                               Foreground="White" FontSize="10"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Détail" Binding="{Binding Detail}" Width="*"/>
+                                    <DataGridTextColumn Header="Recommandation" Binding="{Binding Recommendation}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Button Grid.Row="2" Content="← Retour" 
+                            Style="{StaticResource FuturisticButton}"
+                            Command="{Binding BackToHistoryCommand}"
+                            HorizontalAlignment="Right" Margin="0,20,0,0"/>
+                </Grid>
+            </Grid>
+
+            <!-- VUE PARAMETRES -->
+            <Grid Visibility="{Binding IsSettingsView, Converter={StaticResource BoolToVisibility}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="⚙️ Paramètres" FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,30"/>
+
+                <StackPanel Grid.Row="1">
+                    <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="Répertoire des rapports" FontWeight="Bold" FontSize="16"
+                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                            <TextBlock Text="Sélectionnez le dossier où les rapports seront recherchés."
+                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,15"/>
+                            
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox Grid.Column="0" Text="{Binding ReportDirectory, Mode=TwoWay}"
+                                         IsReadOnly="True" Margin="0,0,10,0"/>
+                                
+                                <Button Grid.Column="1" Content="Parcourir..."
+                                        Style="{StaticResource FuturisticButton}"
+                                        Command="{Binding BrowseReportDirectoryCommand}"
+                                        Padding="20,10"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource PanelBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Droits administrateur" FontWeight="Bold" FontSize="16"
+                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Text="Statut actuel: " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Border CornerRadius="4" Padding="8,4">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#FF4A1515"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAdmin}" Value="True">
+                                                    <Setter Property="Background" Value="#FF1E4620"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="NON ADMIN"/>
+                                                <Setter Property="Foreground" Value="#FFFF4757"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsAdmin}" Value="True">
+                                                        <Setter Property="Text" Value="ADMINISTRATEUR"/>
+                                                        <Setter Property="Foreground" Value="#FF2ED573"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                            
+                            <Button Content="🔐 Relancer en administrateur" 
+                                    Style="{StaticResource FuturisticButton}"
+                                    Command="{Binding RestartAsAdminCommand}"
+                                    HorizontalAlignment="Left"
+                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Content="💾 Enregistrer" 
+                            Style="{StaticResource FuturisticButton}"
+                            Command="{Binding SaveSettingsCommand}"
+                            IsEnabled="{Binding IsSettingsDirty}"
+                            HorizontalAlignment="Right"
+                            Margin="0,30,0,0"
+                            Padding="30,12"
+                            FontSize="16"
+                            FontWeight="SemiBold"/>
+                </StackPanel>
+            </Grid>
+
+        </Grid>
+    </Grid>
+</Window>

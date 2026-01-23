@@ -1,0 +1,9 @@
+[2026-01-23 13:57:55] Application démarrée
+[2026-01-23 13:57:55] MainViewModel initialisé
+[2026-01-23 13:57:55] MainWindow initialisé
+[2026-01-23 13:58:15] Application démarrée
+[2026-01-23 13:58:15] MainViewModel initialisé
+[2026-01-23 13:58:15] MainWindow initialisé
+[2026-01-23 13:58:20] Démarrage du scan
+[2026-01-23 13:58:53] Scan terminé: Score=0
+[2026-01-23 14:18:22] Application fermée

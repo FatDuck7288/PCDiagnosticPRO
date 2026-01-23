@@ -1,0 +1,187 @@
+﻿{
+    "summary":  {
+                    "errorCount":  3,
+                    "criticalCount":  10,
+                    "warningCount":  3,
+                    "score":  0,
+                    "scanDate":  "2026-01-23T13:58:53.0955267-05:00",
+                    "grade":  "D"
+                },
+    "items":  [
+                  {
+                      "detail":  "DESKTOP-LAKVT49",
+                      "category":  "SystÃ¨me",
+                      "name":  "Nom du PC",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "Microsoft Windows 11 Famille - Build 26200",
+                      "category":  "SystÃ¨me",
+                      "name":  "Version Windows",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "7 jours, 20 heures",
+                      "category":  "SystÃ¨me",
+                      "name":  "Uptime",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "AMD Ryzen 9 5900X 12-Core Processor            ",
+                      "category":  "SystÃ¨me",
+                      "name":  "Processeur",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "8%",
+                      "category":  "Performance",
+                      "name":  "Charge CPU",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "27.5% utilisÃ© (95.9 Go total)",
+                      "category":  "MÃ©moire",
+                      "name":  "Utilisation RAM",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "362.7 Go libre sur 952.6 Go (38.1%)",
+                      "category":  "Stockage",
+                      "name":  "Disque C:",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "1055.5 Go libre sur 1863 Go (56.7%)",
+                      "category":  "Stockage",
+                      "name":  "Disque D:",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "1550.3 Go libre sur 1862.2 Go (83.3%)",
+                      "category":  "Stockage",
+                      "name":  "Disque E:",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "1469.4 Go libre sur 1863 Go (78.9%)",
+                      "category":  "Stockage",
+                      "name":  "Disque G:",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "701.2 Go libre sur 1862.9 Go (37.6%)",
+                      "category":  "Stockage",
+                      "name":  "Disque H:",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "ArrÃªtÃ©",
+                      "category":  "Services",
+                      "name":  "Windows Update",
+                      "recommendation":  "DÃ©marrer le service Windows Update",
+                      "severity":  "Major"
+                  },
+                  {
+                      "detail":  "En cours d\u0027exÃ©cution",
+                      "category":  "Services",
+                      "name":  "Windows Defender",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "En cours d\u0027exÃ©cution",
+                      "category":  "Services",
+                      "name":  "Pare-feu Windows",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "ArrÃªtÃ©",
+                      "category":  "Services",
+                      "name":  "Service de transfert intelligent",
+                      "recommendation":  "DÃ©marrer le service Service de transfert intelligent",
+                      "severity":  "Major"
+                  },
+                  {
+                      "detail":  "8 adaptateur(s) connectÃ©(s)",
+                      "category":  "RÃ©seau",
+                      "name":  "Adaptateurs actifs",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "ConnectÃ©",
+                      "category":  "RÃ©seau",
+                      "name":  "Connexion Internet",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "192.168.2.1, 207.164.234.193",
+                      "category":  "RÃ©seau",
+                      "name":  "DNS",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "ActivÃ©e",
+                      "category":  "SÃ©curitÃ©",
+                      "name":  "Protection temps rÃ©el",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "Ã€ jour (0 jours)",
+                      "category":  "SÃ©curitÃ©",
+                      "name":  "Signatures antivirus",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "Actif (3 profil(s))",
+                      "category":  "SÃ©curitÃ©",
+                      "name":  "Pare-feu",
+                      "recommendation":  "",
+                      "severity":  "Info"
+                  },
+                  {
+                      "detail":  "1 mises Ã  jour en attente",
+                      "category":  "Mises Ã  jour",
+                      "name":  "Windows Update",
+                      "recommendation":  "Mises Ã  jour disponibles",
+                      "severity":  "Minor"
+                  },
+                  {
+                      "detail":  "13 programmes",
+                      "category":  "Performance",
+                      "name":  "Programmes au dÃ©marrage",
+                      "recommendation":  "",
+                      "severity":  "Minor"
+                  },
+                  {
+                      "detail":  "2859.2 Mo",
+                      "category":  "Maintenance",
+                      "name":  "Fichiers temporaires",
+                      "recommendation":  "Nettoyage recommandÃ©",
+                      "severity":  "Minor"
+                  },
+                  {
+                      "detail":  "10 erreurs critiques (7 derniers jours)",
+                      "category":  "SystÃ¨me",
+                      "name":  "Ã‰vÃ©nements critiques",
+                      "recommendation":  "VÃ©rifier les journaux systÃ¨me",
+                      "severity":  "Major"
+                  }
+              ]
+}
