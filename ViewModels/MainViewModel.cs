@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using System.Windows.Media;
 using PCDiagnosticPro.Models;
 using PCDiagnosticPro.Services;
 
@@ -46,6 +47,198 @@ namespace PCDiagnosticPro.ViewModels
 
         // Progress tracking
         private int _totalSteps = 27;
+
+        private readonly Dictionary<string, Dictionary<string, string>> _localizedStrings = new()
+        {
+            ["fr"] = new Dictionary<string, string>
+            {
+                ["HomeTitle"] = "PC Diagnostic PRO",
+                ["HomeSubtitle"] = "Outil de diagnostic système professionnel",
+                ["HomeScanTitle"] = "Scan et Fix",
+                ["HomeScanAction"] = "Action : Lancer un diagnostic",
+                ["HomeScanDescription"] = "Analysez votre PC et corrigez les problèmes",
+                ["HomeChatTitle"] = "Chat et Support",
+                ["HomeChatAction"] = "Action : Ouvrir l'assistance",
+                ["HomeChatDescription"] = "Discutez avec l'IA pour résoudre vos problèmes",
+                ["NavHomeTooltip"] = "Tableau de bord",
+                ["NavScanTooltip"] = "Scan Healthcheck",
+                ["NavReportsTooltip"] = "Rapports",
+                ["NavSettingsTooltip"] = "Paramètres",
+                ["HealthProgressTitle"] = "Progression",
+                ["ElapsedTimeLabel"] = "Temps écoulé",
+                ["ConfigsScannedLabel"] = "Configurations scannées",
+                ["CurrentSectionLabel"] = "Section courante",
+                ["LiveFeedLabel"] = "Flux en direct",
+                ["ReportButtonText"] = "Rapport",
+                ["ExportButtonText"] = "Exporter",
+                ["ScanButtonText"] = "ANALYSER",
+                ["ScanButtonSubtext"] = "Cliquez pour démarrer",
+                ["CancelButtonText"] = "Arrêt",
+                ["ChatTitle"] = "Chat et Support",
+                ["ChatSubtitle"] = "Cette fonctionnalité sera disponible prochainement",
+                ["ResultsHistoryTitle"] = "Historique des scans",
+                ["ResultsDetailTitle"] = "Résultats du diagnostic",
+                ["ResultsScanDateFormat"] = "Scan du {0}",
+                ["ResultsDetailsHeader"] = "Détail des éléments analysés",
+                ["ResultsBackButton"] = "← Retour",
+                ["ResultsCategoryHeader"] = "Catégorie",
+                ["ResultsItemHeader"] = "Élément",
+                ["ResultsLevelHeader"] = "Niveau",
+                ["ResultsDetailHeader"] = "Détail",
+                ["ResultsRecommendationHeader"] = "Recommandation",
+                ["SettingsTitle"] = "Paramètres",
+                ["ReportsDirectoryTitle"] = "Répertoire des rapports",
+                ["ReportsDirectoryDescription"] = "Sélectionnez le dossier où les rapports seront recherchés.",
+                ["BrowseButtonText"] = "Parcourir...",
+                ["AdminRightsTitle"] = "Droits administrateur",
+                ["AdminStatusLabel"] = "Statut actuel: ",
+                ["AdminNoText"] = "NON ADMIN",
+                ["AdminYesText"] = "ADMINISTRATEUR",
+                ["RestartAdminButtonText"] = "🔐 Relancer en administrateur",
+                ["SaveSettingsButtonText"] = "💾 Enregistrer",
+                ["LanguageTitle"] = "Langue de l'application",
+                ["LanguageDescription"] = "Choisissez la langue de l'interface.",
+                ["LanguageLabel"] = "Langue",
+                ["ReadyToScan"] = "Prêt à analyser",
+                ["StatusReady"] = "Cliquez sur ANALYSER pour démarrer le diagnostic",
+                ["AdminRequiredWarning"] = "⚠️ Droits administrateur requis pour un scan complet",
+                ["InitStep"] = "Initialisation...",
+                ["StatusScanning"] = "🔄 Analyse en cours...",
+                ["StatusScriptMissing"] = "❌ Script PowerShell introuvable",
+                ["StatusFolderError"] = "❌ Erreur création dossier",
+                ["StatusCanceled"] = "⏹️ Analyse annulée",
+                ["StatusScanError"] = "❌ Erreur lors de l'analyse",
+                ["StatusJsonMissing"] = "⚠️ Scan terminé mais rapport JSON introuvable",
+                ["StatusParsingError"] = "⚠️ Analyse terminée avec des erreurs",
+                ["StatusLoadReportError"] = "⚠️ Erreur lors du chargement du rapport"
+            },
+            ["en"] = new Dictionary<string, string>
+            {
+                ["HomeTitle"] = "PC Diagnostic PRO",
+                ["HomeSubtitle"] = "Professional system diagnostic tool",
+                ["HomeScanTitle"] = "Scan & Fix",
+                ["HomeScanAction"] = "Action: Run a diagnostic",
+                ["HomeScanDescription"] = "Analyze your PC and fix issues",
+                ["HomeChatTitle"] = "Chat & Support",
+                ["HomeChatAction"] = "Action: Open support",
+                ["HomeChatDescription"] = "Chat with AI to resolve your issues",
+                ["NavHomeTooltip"] = "Dashboard",
+                ["NavScanTooltip"] = "Healthcheck scan",
+                ["NavReportsTooltip"] = "Reports",
+                ["NavSettingsTooltip"] = "Settings",
+                ["HealthProgressTitle"] = "Progress",
+                ["ElapsedTimeLabel"] = "Elapsed time",
+                ["ConfigsScannedLabel"] = "Scanned configurations",
+                ["CurrentSectionLabel"] = "Current section",
+                ["LiveFeedLabel"] = "Live Feed",
+                ["ReportButtonText"] = "Report",
+                ["ExportButtonText"] = "Export",
+                ["ScanButtonText"] = "SCAN",
+                ["ScanButtonSubtext"] = "Click to start",
+                ["CancelButtonText"] = "Stop",
+                ["ChatTitle"] = "Chat & Support",
+                ["ChatSubtitle"] = "This feature will be available soon",
+                ["ResultsHistoryTitle"] = "Scan history",
+                ["ResultsDetailTitle"] = "Diagnostic results",
+                ["ResultsScanDateFormat"] = "Scan from {0}",
+                ["ResultsDetailsHeader"] = "Detailed analyzed items",
+                ["ResultsBackButton"] = "← Back",
+                ["ResultsCategoryHeader"] = "Category",
+                ["ResultsItemHeader"] = "Item",
+                ["ResultsLevelHeader"] = "Level",
+                ["ResultsDetailHeader"] = "Detail",
+                ["ResultsRecommendationHeader"] = "Recommendation",
+                ["SettingsTitle"] = "Settings",
+                ["ReportsDirectoryTitle"] = "Reports directory",
+                ["ReportsDirectoryDescription"] = "Select the folder where reports will be searched.",
+                ["BrowseButtonText"] = "Browse...",
+                ["AdminRightsTitle"] = "Administrator rights",
+                ["AdminStatusLabel"] = "Current status: ",
+                ["AdminNoText"] = "NOT ADMIN",
+                ["AdminYesText"] = "ADMINISTRATOR",
+                ["RestartAdminButtonText"] = "🔐 Restart as administrator",
+                ["SaveSettingsButtonText"] = "💾 Save",
+                ["LanguageTitle"] = "Application language",
+                ["LanguageDescription"] = "Choose the interface language.",
+                ["LanguageLabel"] = "Language",
+                ["ReadyToScan"] = "Ready to scan",
+                ["StatusReady"] = "Click SCAN to start the diagnostic",
+                ["AdminRequiredWarning"] = "⚠️ Administrator rights required for a full scan",
+                ["InitStep"] = "Initializing...",
+                ["StatusScanning"] = "🔄 Scan in progress...",
+                ["StatusScriptMissing"] = "❌ PowerShell script not found",
+                ["StatusFolderError"] = "❌ Error creating folder",
+                ["StatusCanceled"] = "⏹️ Scan canceled",
+                ["StatusScanError"] = "❌ Error during scan",
+                ["StatusJsonMissing"] = "⚠️ Scan completed but JSON report not found",
+                ["StatusParsingError"] = "⚠️ Scan completed with errors",
+                ["StatusLoadReportError"] = "⚠️ Error while loading the report"
+            },
+            ["es"] = new Dictionary<string, string>
+            {
+                ["HomeTitle"] = "PC Diagnostic PRO",
+                ["HomeSubtitle"] = "Herramienta profesional de diagnóstico del sistema",
+                ["HomeScanTitle"] = "Escanear y reparar",
+                ["HomeScanAction"] = "Acción: Ejecutar un diagnóstico",
+                ["HomeScanDescription"] = "Analice su PC y corrija los problemas",
+                ["HomeChatTitle"] = "Chat y soporte",
+                ["HomeChatAction"] = "Acción: Abrir soporte",
+                ["HomeChatDescription"] = "Chatee con la IA para resolver sus problemas",
+                ["NavHomeTooltip"] = "Panel",
+                ["NavScanTooltip"] = "Escaneo de salud",
+                ["NavReportsTooltip"] = "Informes",
+                ["NavSettingsTooltip"] = "Configuración",
+                ["HealthProgressTitle"] = "Progreso",
+                ["ElapsedTimeLabel"] = "Tiempo transcurrido",
+                ["ConfigsScannedLabel"] = "Configuraciones escaneadas",
+                ["CurrentSectionLabel"] = "Sección actual",
+                ["LiveFeedLabel"] = "Feed en vivo",
+                ["ReportButtonText"] = "Informe",
+                ["ExportButtonText"] = "Exportar",
+                ["ScanButtonText"] = "ESCANEAR",
+                ["ScanButtonSubtext"] = "Haga clic para iniciar",
+                ["CancelButtonText"] = "Detener",
+                ["ChatTitle"] = "Chat y soporte",
+                ["ChatSubtitle"] = "Esta función estará disponible pronto",
+                ["ResultsHistoryTitle"] = "Historial de escaneos",
+                ["ResultsDetailTitle"] = "Resultados del diagnóstico",
+                ["ResultsScanDateFormat"] = "Escaneo del {0}",
+                ["ResultsDetailsHeader"] = "Detalle de elementos analizados",
+                ["ResultsBackButton"] = "← Volver",
+                ["ResultsCategoryHeader"] = "Categoría",
+                ["ResultsItemHeader"] = "Elemento",
+                ["ResultsLevelHeader"] = "Nivel",
+                ["ResultsDetailHeader"] = "Detalle",
+                ["ResultsRecommendationHeader"] = "Recomendación",
+                ["SettingsTitle"] = "Configuración",
+                ["ReportsDirectoryTitle"] = "Directorio de informes",
+                ["ReportsDirectoryDescription"] = "Seleccione la carpeta donde se buscarán los informes.",
+                ["BrowseButtonText"] = "Examinar...",
+                ["AdminRightsTitle"] = "Permisos de administrador",
+                ["AdminStatusLabel"] = "Estado actual: ",
+                ["AdminNoText"] = "SIN ADMIN",
+                ["AdminYesText"] = "ADMINISTRADOR",
+                ["RestartAdminButtonText"] = "🔐 Reiniciar como administrador",
+                ["SaveSettingsButtonText"] = "💾 Guardar",
+                ["LanguageTitle"] = "Idioma de la aplicación",
+                ["LanguageDescription"] = "Elija el idioma de la interfaz.",
+                ["LanguageLabel"] = "Idioma",
+                ["ReadyToScan"] = "Listo para escanear",
+                ["StatusReady"] = "Haga clic en ESCANEAR para iniciar el diagnóstico",
+                ["AdminRequiredWarning"] = "⚠️ Se requieren permisos de administrador para un análisis completo",
+                ["InitStep"] = "Inicializando...",
+                ["StatusScanning"] = "🔄 Análisis en curso...",
+                ["StatusScriptMissing"] = "❌ Script de PowerShell no encontrado",
+                ["StatusFolderError"] = "❌ Error al crear la carpeta",
+                ["StatusCanceled"] = "⏹️ Análisis cancelado",
+                ["StatusScanError"] = "❌ Error durante el análisis",
+                ["StatusJsonMissing"] = "⚠️ Escaneo completado pero no se encontró el informe JSON",
+                ["StatusParsingError"] = "⚠️ Análisis completado con errores",
+                ["StatusLoadReportError"] = "⚠️ Error al cargar el informe"
+            }
+        };
+
+        private bool _isUpdatingLanguage;
 
         #endregion
 
@@ -176,6 +369,7 @@ namespace PCDiagnosticPro.ViewModels
                 if (SetProperty(ref _selectedHistoryScan, value))
                 {
                     OnPropertyChanged(nameof(IsViewingHistoryDetail));
+                    OnPropertyChanged(nameof(SelectedScanDateDisplay));
                     if (value != null && value.Result != null)
                     {
                         ScanResult = value.Result;
@@ -191,7 +385,14 @@ namespace PCDiagnosticPro.ViewModels
         public bool IsAdmin
         {
             get => _isAdmin;
-            set => SetProperty(ref _isAdmin, value);
+            set
+            {
+                if (SetProperty(ref _isAdmin, value))
+                {
+                    OnPropertyChanged(nameof(AdminStatusText));
+                    OnPropertyChanged(nameof(AdminStatusForeground));
+                }
+            }
         }
 
         private string _elapsedTime = "00:00";
@@ -221,6 +422,114 @@ namespace PCDiagnosticPro.ViewModels
             get => _isSettingsDirty;
             set => SetProperty(ref _isSettingsDirty, value);
         }
+
+        private string _currentLanguage = "fr";
+        public string CurrentLanguage
+        {
+            get => _currentLanguage;
+            set
+            {
+                if (SetProperty(ref _currentLanguage, value))
+                {
+                    UpdateLocalizedStrings();
+                    if (!_isUpdatingLanguage)
+                    {
+                        _isUpdatingLanguage = true;
+                        SelectedLanguage = AvailableLanguages.FirstOrDefault(l => l.Code == value)
+                                           ?? AvailableLanguages.First();
+                        _isUpdatingLanguage = false;
+                    }
+
+                    if (!_isLoadingSettings)
+                    {
+                        IsSettingsDirty = true;
+                    }
+                }
+            }
+        }
+
+        public ObservableCollection<LanguageOption> AvailableLanguages { get; } =
+            new ObservableCollection<LanguageOption>
+            {
+                new LanguageOption { Code = "fr", DisplayName = "Français" },
+                new LanguageOption { Code = "en", DisplayName = "English" },
+                new LanguageOption { Code = "es", DisplayName = "Español" }
+            };
+
+        private LanguageOption? _selectedLanguage;
+        public LanguageOption? SelectedLanguage
+        {
+            get => _selectedLanguage;
+            set
+            {
+                if (SetProperty(ref _selectedLanguage, value) && value != null)
+                {
+                    if (!_isUpdatingLanguage)
+                    {
+                        _isUpdatingLanguage = true;
+                        CurrentLanguage = value.Code;
+                        _isUpdatingLanguage = false;
+                    }
+
+                    if (!_isLoadingSettings)
+                    {
+                        IsSettingsDirty = true;
+                    }
+                }
+            }
+        }
+
+        public string HomeTitle => GetString("HomeTitle");
+        public string HomeSubtitle => GetString("HomeSubtitle");
+        public string HomeScanTitle => GetString("HomeScanTitle");
+        public string HomeScanAction => GetString("HomeScanAction");
+        public string HomeScanDescription => GetString("HomeScanDescription");
+        public string HomeChatTitle => GetString("HomeChatTitle");
+        public string HomeChatAction => GetString("HomeChatAction");
+        public string HomeChatDescription => GetString("HomeChatDescription");
+        public string NavHomeTooltip => GetString("NavHomeTooltip");
+        public string NavScanTooltip => GetString("NavScanTooltip");
+        public string NavReportsTooltip => GetString("NavReportsTooltip");
+        public string NavSettingsTooltip => GetString("NavSettingsTooltip");
+        public string HealthProgressTitle => GetString("HealthProgressTitle");
+        public string ElapsedTimeLabel => GetString("ElapsedTimeLabel");
+        public string ConfigsScannedLabel => GetString("ConfigsScannedLabel");
+        public string CurrentSectionLabel => GetString("CurrentSectionLabel");
+        public string LiveFeedLabel => GetString("LiveFeedLabel");
+        public string ReportButtonText => GetString("ReportButtonText");
+        public string ExportButtonText => GetString("ExportButtonText");
+        public string ScanButtonText => GetString("ScanButtonText");
+        public string ScanButtonSubtext => GetString("ScanButtonSubtext");
+        public string CancelButtonText => GetString("CancelButtonText");
+        public string ChatTitle => GetString("ChatTitle");
+        public string ChatSubtitle => GetString("ChatSubtitle");
+        public string ResultsHistoryTitle => GetString("ResultsHistoryTitle");
+        public string ResultsDetailTitle => GetString("ResultsDetailTitle");
+        public string ResultsDetailsHeader => GetString("ResultsDetailsHeader");
+        public string ResultsBackButton => GetString("ResultsBackButton");
+        public string ResultsCategoryHeader => GetString("ResultsCategoryHeader");
+        public string ResultsItemHeader => GetString("ResultsItemHeader");
+        public string ResultsLevelHeader => GetString("ResultsLevelHeader");
+        public string ResultsDetailHeader => GetString("ResultsDetailHeader");
+        public string ResultsRecommendationHeader => GetString("ResultsRecommendationHeader");
+        public string SettingsTitle => GetString("SettingsTitle");
+        public string ReportsDirectoryTitle => GetString("ReportsDirectoryTitle");
+        public string ReportsDirectoryDescription => GetString("ReportsDirectoryDescription");
+        public string BrowseButtonText => GetString("BrowseButtonText");
+        public string AdminRightsTitle => GetString("AdminRightsTitle");
+        public string AdminStatusLabel => GetString("AdminStatusLabel");
+        public string AdminStatusText => IsAdmin ? GetString("AdminYesText") : GetString("AdminNoText");
+        public Brush AdminStatusForeground => IsAdmin
+            ? new SolidColorBrush(Color.FromRgb(46, 213, 115))
+            : new SolidColorBrush(Color.FromRgb(255, 71, 87));
+        public string RestartAdminButtonText => GetString("RestartAdminButtonText");
+        public string SaveSettingsButtonText => GetString("SaveSettingsButtonText");
+        public string LanguageTitle => GetString("LanguageTitle");
+        public string LanguageDescription => GetString("LanguageDescription");
+        public string LanguageLabel => GetString("LanguageLabel");
+        public string SelectedScanDateDisplay => SelectedHistoryScan != null
+            ? string.Format(GetString("ResultsScanDateFormat"), SelectedHistoryScan.DateDisplay)
+            : string.Empty;
 
         // Collections
         public ObservableCollection<string> LiveFeedItems { get; } = new ObservableCollection<string>();
@@ -282,6 +591,11 @@ namespace PCDiagnosticPro.ViewModels
 
             // Charger les paramètres
             LoadSettings();
+            _isUpdatingLanguage = true;
+            SelectedLanguage = AvailableLanguages.FirstOrDefault(l => l.Code == CurrentLanguage)
+                               ?? AvailableLanguages.First();
+            _isUpdatingLanguage = false;
+            UpdateLocalizedStrings();
 
             // Initialiser les commandes
             StartScanCommand = new AsyncRelayCommand(StartScanAsync, () => CanStartScan);
@@ -306,7 +620,7 @@ namespace PCDiagnosticPro.ViewModels
 
             if (!IsAdmin)
             {
-                StatusMessage = "⚠️ Droits administrateur requis pour un scan complet";
+                StatusMessage = GetString("AdminRequiredWarning");
             }
 
             App.LogMessage("MainViewModel initialisé");
@@ -333,7 +647,7 @@ namespace PCDiagnosticPro.ViewModels
                 if (!File.Exists(_scriptPath))
                 {
                     ErrorMessage = $"Script introuvable: {_scriptPath}";
-                    StatusMessage = "❌ Script PowerShell introuvable";
+                    StatusMessage = GetString("StatusScriptMissing");
                     ScanState = "Error";
                     App.LogMessage($"Script non trouvé: {_scriptPath}");
                     return;
@@ -349,7 +663,7 @@ namespace PCDiagnosticPro.ViewModels
                     catch (Exception ex)
                     {
                         ErrorMessage = $"Impossible de créer le dossier Rapports: {ex.Message}";
-                        StatusMessage = "❌ Erreur création dossier";
+                        StatusMessage = GetString("StatusFolderError");
                         ScanState = "Error";
                         return;
                     }
@@ -374,9 +688,9 @@ namespace PCDiagnosticPro.ViewModels
                 ScanState = "Scanning";
                 Progress = 0;
                 ProgressCount = 0;
-                CurrentStep = "Initialisation...";
+                CurrentStep = GetString("InitStep");
                 CurrentSection = string.Empty;
-                StatusMessage = "🔄 Analyse en cours...";
+                StatusMessage = GetString("StatusScanning");
                 ErrorMessage = string.Empty;
                 LiveFeedItems.Clear();
                 ScanItems.Clear();
@@ -462,7 +776,7 @@ namespace PCDiagnosticPro.ViewModels
                 else
                 {
                     ErrorMessage = $"Rapport JSON non trouvé: {_resultJsonPath}";
-                    StatusMessage = "⚠️ Scan terminé mais rapport JSON introuvable";
+                    StatusMessage = GetString("StatusJsonMissing");
                     ScanState = "Completed";
                 }
             }
@@ -470,7 +784,7 @@ namespace PCDiagnosticPro.ViewModels
             {
                 _scanStopwatch.Stop();
                 _liveFeedTimer.Stop();
-                StatusMessage = "⏹️ Analyse annulée";
+                StatusMessage = GetString("StatusCanceled");
                 ScanState = "Idle";
                 AddLiveFeedItem("⏹️ Analyse annulée");
                 App.LogMessage("Scan annulé");
@@ -480,7 +794,7 @@ namespace PCDiagnosticPro.ViewModels
                 _scanStopwatch.Stop();
                 _liveFeedTimer.Stop();
                 ErrorMessage = ex.Message;
-                StatusMessage = "❌ Erreur lors de l'analyse";
+                StatusMessage = GetString("StatusScanError");
                 ScanState = "Error";
                 App.LogMessage($"Erreur scan: {ex.Message}");
             }
@@ -585,7 +899,7 @@ namespace PCDiagnosticPro.ViewModels
                 else
                 {
                     ErrorMessage = "Erreur lors du parsing JSON";
-                    StatusMessage = "⚠️ Analyse terminée avec des erreurs";
+                    StatusMessage = GetString("StatusParsingError");
                     ScanState = "Completed";
                 }
 
@@ -594,7 +908,7 @@ namespace PCDiagnosticPro.ViewModels
             catch (Exception ex)
             {
                 ErrorMessage = $"Erreur lecture JSON: {ex.Message}";
-                StatusMessage = "⚠️ Erreur lors du chargement du rapport";
+                StatusMessage = GetString("StatusLoadReportError");
                 ScanState = "Error";
                 App.LogMessage($"Erreur parsing JSON: {ex.Message}");
             }
@@ -659,9 +973,9 @@ namespace PCDiagnosticPro.ViewModels
                 // Reset UI
                 Progress = 0;
                 ProgressCount = 0;
-                CurrentStep = "Prêt à analyser";
+                CurrentStep = GetString("ReadyToScan");
                 CurrentSection = string.Empty;
-                StatusMessage = "⏹️ Analyse annulée";
+                StatusMessage = GetString("StatusCanceled");
                 ScanState = "Idle";
                 AddLiveFeedItem("⏹️ Analyse annulée");
                 App.LogMessage("Scan annulé");
@@ -756,7 +1070,8 @@ namespace PCDiagnosticPro.ViewModels
             {
                 var config = new
                 {
-                    ReportDirectory = ReportDirectory
+                    ReportDirectory = ReportDirectory,
+                    Language = CurrentLanguage
                 };
 
                 var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
@@ -793,6 +1108,11 @@ namespace PCDiagnosticPro.ViewModels
                     {
                         _reportDirectory = Path.Combine(_baseDir, "Rapports");
                     }
+
+                    if (root.TryGetProperty("Language", out var languageEl))
+                    {
+                        CurrentLanguage = languageEl.GetString() ?? "fr";
+                    }
                 }
                 else
                 {
@@ -810,6 +1130,88 @@ namespace PCDiagnosticPro.ViewModels
             finally
             {
                 _isLoadingSettings = false;
+            }
+        }
+
+        private string GetString(string key)
+        {
+            if (_localizedStrings.TryGetValue(CurrentLanguage, out var languageSet) &&
+                languageSet.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+
+            if (_localizedStrings.TryGetValue("fr", out var fallback) &&
+                fallback.TryGetValue(key, out var fallbackValue))
+            {
+                return fallbackValue;
+            }
+
+            return key;
+        }
+
+        private void UpdateLocalizedStrings()
+        {
+            var properties = new[]
+            {
+                nameof(HomeTitle),
+                nameof(HomeSubtitle),
+                nameof(HomeScanTitle),
+                nameof(HomeScanAction),
+                nameof(HomeScanDescription),
+                nameof(HomeChatTitle),
+                nameof(HomeChatAction),
+                nameof(HomeChatDescription),
+                nameof(NavHomeTooltip),
+                nameof(NavScanTooltip),
+                nameof(NavReportsTooltip),
+                nameof(NavSettingsTooltip),
+                nameof(HealthProgressTitle),
+                nameof(ElapsedTimeLabel),
+                nameof(ConfigsScannedLabel),
+                nameof(CurrentSectionLabel),
+                nameof(LiveFeedLabel),
+                nameof(ReportButtonText),
+                nameof(ExportButtonText),
+                nameof(ScanButtonText),
+                nameof(ScanButtonSubtext),
+                nameof(CancelButtonText),
+                nameof(ChatTitle),
+                nameof(ChatSubtitle),
+                nameof(ResultsHistoryTitle),
+                nameof(ResultsDetailTitle),
+                nameof(ResultsDetailsHeader),
+                nameof(ResultsBackButton),
+                nameof(ResultsCategoryHeader),
+                nameof(ResultsItemHeader),
+                nameof(ResultsLevelHeader),
+                nameof(ResultsDetailHeader),
+                nameof(ResultsRecommendationHeader),
+                nameof(SettingsTitle),
+                nameof(ReportsDirectoryTitle),
+                nameof(ReportsDirectoryDescription),
+                nameof(BrowseButtonText),
+                nameof(AdminRightsTitle),
+                nameof(AdminStatusLabel),
+                nameof(AdminStatusText),
+                nameof(AdminStatusForeground),
+                nameof(RestartAdminButtonText),
+                nameof(SaveSettingsButtonText),
+                nameof(LanguageTitle),
+                nameof(LanguageDescription),
+                nameof(LanguageLabel),
+                nameof(SelectedScanDateDisplay)
+            };
+
+            foreach (var prop in properties)
+            {
+                OnPropertyChanged(prop);
+            }
+
+            if (IsIdle)
+            {
+                CurrentStep = GetString("ReadyToScan");
+                StatusMessage = IsAdmin ? GetString("StatusReady") : GetString("AdminRequiredWarning");
             }
         }
 

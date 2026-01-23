@@ -263,4 +263,73 @@ namespace PCDiagnosticPro.Converters
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Convertit une progression en géométrie d'arc pour un indicateur circulaire
+    /// </summary>
+    public class ProgressToArcConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var percent = 0.0;
+            if (value is int intValue)
+            {
+                percent = intValue;
+            }
+            else if (value is double doubleValue)
+            {
+                percent = doubleValue;
+            }
+            else if (value != null && double.TryParse(value.ToString(), out var parsed))
+            {
+                percent = parsed;
+            }
+
+            percent = Math.Max(0.0, Math.Min(100.0, percent));
+            if (percent <= 0.0)
+            {
+                return Geometry.Empty;
+            }
+
+            var radius = 130.0;
+            if (parameter != null && double.TryParse(parameter.ToString(), out var parsedRadius))
+            {
+                radius = parsedRadius;
+            }
+
+            var center = new Point(radius, radius);
+            var angle = percent / 100.0 * 360.0;
+            var radians = angle * Math.PI / 180.0;
+
+            var startPoint = new Point(center.X, center.Y - radius);
+            var endPoint = new Point(
+                center.X + radius * Math.Sin(radians),
+                center.Y - radius * Math.Cos(radians));
+
+            var isLargeArc = angle > 180.0;
+
+            var figure = new PathFigure
+            {
+                StartPoint = startPoint,
+                IsClosed = false,
+                IsFilled = false
+            };
+            figure.Segments.Add(new ArcSegment
+            {
+                Point = endPoint,
+                Size = new Size(radius, radius),
+                SweepDirection = SweepDirection.Clockwise,
+                IsLargeArc = isLargeArc
+            });
+
+            var geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+            return geometry;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
