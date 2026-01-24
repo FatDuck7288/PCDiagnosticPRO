@@ -54,7 +54,7 @@ namespace PCDiagnosticPro
             try
             {
                 var logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
-                File.AppendAllText(LogPath, logEntry + Environment.NewLine);
+                File.AppendAllText(LogPath, logEntry + Environment.NewLine, new System.Text.UTF8Encoding(false));
             }
             catch
             {

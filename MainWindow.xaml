@@ -207,8 +207,8 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,20"
-                            Height="{StaticResource CompactPanelHeight}">
+                    <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,24"
+                            MinHeight="{StaticResource CompactPanelHeight}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -228,7 +228,8 @@
                                      Background="Transparent" BorderThickness="0"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                     FontFamily="Consolas" FontSize="10">
+                                     FontFamily="Consolas" FontSize="10"
+                                     Margin="0,2,0,0">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
@@ -252,6 +253,42 @@
                             <Ellipse Width="260" Height="260" 
                                      Stroke="{StaticResource BackgroundLightBrush}" 
                                      StrokeThickness="8"/>
+
+                            <Path Width="260" Height="260"
+                                  StrokeThickness="16"
+                                  StrokeDashCap="Round"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  Data="{Binding Progress, Converter={StaticResource ProgressToArc}, ConverterParameter=130}"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}"
+                                  Opacity="0.7">
+                                <Path.Stroke>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="{StaticResource AccentRed}" Offset="0"/>
+                                        <GradientStop Color="#FFFF8B94" Offset="0.5"/>
+                                        <GradientStop Color="{StaticResource AccentRed}" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Path.Stroke>
+                                <Path.Effect>
+                                    <DropShadowEffect Color="{StaticResource AccentRed}"
+                                                      BlurRadius="18"
+                                                      ShadowDepth="0"
+                                                      Opacity="0.6"/>
+                                </Path.Effect>
+                                <Path.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                <DoubleAnimation Storyboard.TargetProperty="Effect.(DropShadowEffect.BlurRadius)"
+                                                                 From="14" To="32" Duration="0:0:1.4"/>
+                                                <DoubleAnimation Storyboard.TargetProperty="Effect.(DropShadowEffect.Opacity)"
+                                                                 From="0.4" To="0.9" Duration="0:0:1.4"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Path.Triggers>
+                            </Path>
 
                             <Path Width="260" Height="260"
                                   StrokeThickness="12"
@@ -365,11 +402,6 @@
                                                                HorizontalAlignment="Center"
                                                                TextTrimming="CharacterEllipsis"
                                                                MaxWidth="160" TextAlignment="Center"/>
-                                                    <Button Content="{Binding CancelButtonText}" Width="60" Height="40"
-                                                            FontSize="12" Padding="0"
-                                                            Style="{StaticResource FuturisticButton}"
-                                                            Command="{Binding CancelScanCommand}"
-                                                            ToolTip="{Binding CancelButtonText}"/>
                                                 </StackPanel>
                                                 
                                                 <StackPanel Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVisibility}}"
@@ -413,6 +445,16 @@
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
+
+                            <Button Content="{Binding CancelButtonText}" Width="70" Height="36"
+                                    FontSize="12" Padding="0"
+                                    Style="{StaticResource FuturisticButton}"
+                                    Command="{Binding CancelScanCommand}"
+                                    ToolTip="{Binding CancelButtonText}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Margin="0,105,0,0"
+                                    Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}"/>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -681,20 +723,6 @@
                                 <StackPanel>
                                     <TextBlock Text="{Binding ScoreLegendTitle}" FontWeight="Bold" FontSize="16"
                                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
-
-                                    <TextBlock Text="{Binding ScoreRulesTitle}" FontWeight="SemiBold"
-                                               Foreground="{StaticResource AccentRedBrush}" Margin="0,0,0,6"/>
-                                    <StackPanel Margin="10,0,0,10">
-                                        <TextBlock Text="{Binding ScoreRuleInitial}"/>
-                                        <TextBlock Text="{Binding ScoreRuleCritical}"/>
-                                        <TextBlock Text="{Binding ScoreRuleError}"/>
-                                        <TextBlock Text="{Binding ScoreRuleWarning}"/>
-                                        <TextBlock Text="{Binding ScoreRuleMin}"/>
-                                        <TextBlock Text="{Binding ScoreRuleMax}"/>
-                                    </StackPanel>
-
-                                    <TextBlock Text="{Binding ScoreGradesTitle}" FontWeight="SemiBold"
-                                               Foreground="{StaticResource AccentRedBrush}" Margin="0,0,0,6"/>
                                     <StackPanel Margin="10,0,0,0">
                                         <TextBlock Text="{Binding ScoreGradeA}"/>
                                         <TextBlock Text="{Binding ScoreGradeB}"/>
@@ -844,13 +872,19 @@
                             <TextBlock Text="{Binding LanguageDescription}"
                                        FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,15"/>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding LanguageLabel}" Foreground="Black"
+                                <TextBlock Text="{Binding LanguageLabel}" Foreground="#FF000000"
                                            VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <ComboBox ItemsSource="{Binding AvailableLanguages}"
                                           SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
                                           DisplayMemberPath="DisplayName"
                                           Width="200"
-                                          Foreground="Black"/>
+                                          Foreground="#FF000000">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="#FF000000"/>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
                             </StackPanel>
                         </StackPanel>
                     </Border>
