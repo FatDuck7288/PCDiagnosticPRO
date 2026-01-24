@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:PCDiagnosticPro.ViewModels"
         xmlns:conv="clr-namespace:PCDiagnosticPro.Converters"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="PC Diagnostic Pro" 
         Height="800" Width="1100"
@@ -24,6 +25,7 @@
         <conv:ProgressToBlurConverter x:Key="ProgressToBlur"/>
         <conv:ProgressToOpacityConverter x:Key="ProgressToOpacity"/>
         <conv:ProgressToArcConverter x:Key="ProgressToArc"/>
+        <sys:Double x:Key="CompactPanelHeight">140</sys:Double>
     </Window.Resources>
 
     <Grid>
@@ -201,11 +203,12 @@
 
                 <Grid Grid.Column="0">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,20">
+                    <Border Grid.Row="0" Style="{StaticResource PanelBorder}" Margin="0,0,0,20"
+                            Height="{StaticResource CompactPanelHeight}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -249,6 +252,41 @@
                             <Ellipse Width="260" Height="260" 
                                      Stroke="{StaticResource BackgroundLightBrush}" 
                                      StrokeThickness="8"/>
+
+                            <Path Width="260" Height="260"
+                                  StrokeThickness="12"
+                                  StrokeDashArray="2 6"
+                                  StrokeDashCap="Round"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  Data="{Binding Progress, Converter={StaticResource ProgressToArc}, ConverterParameter=130}"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}"
+                                  Opacity="{Binding Progress, Converter={StaticResource ProgressToOpacity}}">
+                                <Path.Stroke>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="{StaticResource AccentRed}" Offset="0"/>
+                                        <GradientStop Color="#FFFF8B94" Offset="0.5"/>
+                                        <GradientStop Color="{StaticResource AccentRed}" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Path.Stroke>
+                                <Path.Effect>
+                                    <DropShadowEffect Color="{StaticResource AccentRed}"
+                                                      BlurRadius="{Binding Progress, Converter={StaticResource ProgressToBlur}}"
+                                                      ShadowDepth="0"
+                                                      Opacity="0.8"/>
+                                </Path.Effect>
+                                <Path.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard RepeatBehavior="Forever">
+                                                <DoubleAnimation Storyboard.TargetProperty="StrokeDashOffset"
+                                                                 From="0" To="-20" Duration="0:0:1.2"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Path.Triggers>
+                            </Path>
 
                             <Path Width="260" Height="260"
                                   Stroke="{StaticResource AccentRedBrush}"
@@ -460,10 +498,11 @@
             <!-- VUE RESULTATS -->
             <Grid Visibility="{Binding IsResultsView, Converter={StaticResource BoolToVisibility}}">
                 
-                <Grid Visibility="{Binding IsViewingHistoryDetail, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                <Grid Visibility="{Binding IsViewingHistoryList, Converter={StaticResource BoolToVisibility}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" FontSize="24" FontWeight="Bold"
@@ -480,19 +519,54 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Cursor="Hand">
-                                        <Border.InputBindings>
-                                            <MouseBinding MouseAction="LeftClick" 
-                                                          Command="{Binding DataContext.SelectHistoryScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          CommandParameter="{Binding}"/>
-                                        </Border.InputBindings>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <Border Grid.Column="0" Width="60" Height="60" CornerRadius="8"
+                                            <Menu Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                  Background="Transparent">
+                                                <Menu.Resources>
+                                                    <Style TargetType="MenuItem">
+                                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                                        <Setter Property="Background" Value="{StaticResource BackgroundMediumBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                                                        <Setter Property="BorderThickness" Value="1"/>
+                                                        <Setter Property="Padding" Value="10,6"/>
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="MenuItem">
+                                                                    <Border Background="{TemplateBinding Background}"
+                                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                                                            CornerRadius="6"
+                                                                            Padding="{TemplateBinding Padding}">
+                                                                        <ContentPresenter VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Background" Value="{StaticResource AccentRedBrush}"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Menu.Resources>
+                                                <MenuItem Header="⋯" FontSize="18" Foreground="{StaticResource TextPrimaryBrush}">
+                                                    <MenuItem Header="{Binding DataContext.ArchiveMenuText, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              Command="{Binding DataContext.ArchiveScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    <MenuItem Header="{Binding DataContext.DeleteMenuText, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              Command="{Binding DataContext.DeleteScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              CommandParameter="{Binding}"/>
+                                                </MenuItem>
+                                            </Menu>
+
+                                            <Border Grid.Column="1" Width="60" Height="60" CornerRadius="8"
                                                     Background="{Binding Grade, Converter={StaticResource GradeToColor}}"
                                                     Margin="0,0,15,0">
                                                 <StackPanel VerticalAlignment="Center">
@@ -503,22 +577,33 @@
                                                 </StackPanel>
                                             </Border>
 
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding DateDisplay}" FontSize="16" FontWeight="SemiBold"
                                                            Foreground="{StaticResource TextPrimaryBrush}"/>
                                                 <TextBlock Text="{Binding ScoreDisplay}" FontSize="12"
                                                            Foreground="{StaticResource TextSecondaryBrush}"/>
                                             </StackPanel>
 
-                                            <TextBlock Grid.Column="2" Text="→" FontSize="24"
+                                            <TextBlock Grid.Column="3" Text="→" FontSize="24"
                                                        Foreground="{StaticResource TextSecondaryBrush}"
                                                        VerticalAlignment="Center"/>
+
+                                            <Grid.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" 
+                                                              Command="{Binding DataContext.SelectHistoryScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              CommandParameter="{Binding}"/>
+                                            </Grid.InputBindings>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
+
+                    <Button Grid.Row="2" Content="{Binding ArchivesButtonText}" 
+                            Style="{StaticResource FuturisticButton}"
+                            Command="{Binding NavigateToArchivesCommand}"
+                            HorizontalAlignment="Right" Margin="0,20,0,0"/>
                 </Grid>
 
                 <Grid Visibility="{Binding IsViewingHistoryDetail, Converter={StaticResource BoolToVisibility}}">
@@ -528,18 +613,25 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                        <TextBlock FontSize="24" FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}">
-                            <TextBlock.Text>
-                                <MultiBinding StringFormat="📊 {0}">
-                                    <Binding Path="ResultsDetailTitle"/>
-                                </MultiBinding>
-                            </TextBlock.Text>
-                        </TextBlock>
-                        <TextBlock Text="{Binding SelectedScanDateDisplay}" 
-                                   FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/>
-                    </StackPanel>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,20">
+                        <Button Content="{Binding ResultsBackButton}" 
+                                Style="{StaticResource FuturisticButton}"
+                                Command="{Binding BackToHistoryCommand}"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,20,0"/>
+                        <StackPanel>
+                            <TextBlock FontSize="24" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="📊 {0}">
+                                        <Binding Path="ResultsDetailTitle"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                            <TextBlock Text="{Binding SelectedScanDateDisplay}" 
+                                       FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </DockPanel>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
@@ -584,13 +676,122 @@
                                     <DataGridTextColumn Header="{Binding DataContext.ResultsRecommendationHeader, RelativeSource={RelativeSource AncestorType=Window}}" Binding="{Binding Recommendation}" Width="*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
+
+                            <Border Style="{StaticResource PanelBorder}" Margin="0,20,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding ScoreLegendTitle}" FontWeight="Bold" FontSize="16"
+                                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+
+                                    <TextBlock Text="{Binding ScoreRulesTitle}" FontWeight="SemiBold"
+                                               Foreground="{StaticResource AccentRedBrush}" Margin="0,0,0,6"/>
+                                    <StackPanel Margin="10,0,0,10">
+                                        <TextBlock Text="{Binding ScoreRuleInitial}"/>
+                                        <TextBlock Text="{Binding ScoreRuleCritical}"/>
+                                        <TextBlock Text="{Binding ScoreRuleError}"/>
+                                        <TextBlock Text="{Binding ScoreRuleWarning}"/>
+                                        <TextBlock Text="{Binding ScoreRuleMin}"/>
+                                        <TextBlock Text="{Binding ScoreRuleMax}"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="{Binding ScoreGradesTitle}" FontWeight="SemiBold"
+                                               Foreground="{StaticResource AccentRedBrush}" Margin="0,0,0,6"/>
+                                    <StackPanel Margin="10,0,0,0">
+                                        <TextBlock Text="{Binding ScoreGradeA}"/>
+                                        <TextBlock Text="{Binding ScoreGradeB}"/>
+                                        <TextBlock Text="{Binding ScoreGradeC}"/>
+                                        <TextBlock Text="{Binding ScoreGradeD}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
 
-                    <Button Grid.Row="2" Content="{Binding ResultsBackButton}" 
-                            Style="{StaticResource FuturisticButton}"
-                            Command="{Binding BackToHistoryCommand}"
-                            HorizontalAlignment="Right" Margin="0,20,0,0"/>
+                    <Border Grid.Row="2" Height="1" Background="Transparent"/>
+                </Grid>
+
+                <Grid Visibility="{Binding IsViewingArchives, Converter={StaticResource BoolToVisibility}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,20">
+                        <Button Content="{Binding ResultsBackButton}" 
+                                Style="{StaticResource FuturisticButton}"
+                                Command="{Binding BackToHistoryCommand}"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,20,0"/>
+                        <TextBlock FontSize="24" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="📦 {0}">
+                                    <Binding Path="ArchivesTitle"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </DockPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ArchivedScanHistoryView.Groups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,20">
+                                        <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
+                                        <ItemsControl ItemsSource="{Binding Items}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Cursor="Hand">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <TextBlock Grid.Column="0" Text="{Binding DayDisplay}" FontSize="20"
+                                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                                       VerticalAlignment="Center" Margin="0,0,15,0"
+                                                                       IsHitTestVisible="False"/>
+
+                                                            <Border Grid.Column="1" Width="60" Height="60" CornerRadius="8"
+                                                                    Background="{Binding Grade, Converter={StaticResource GradeToColor}}"
+                                                                    Margin="0,0,15,0">
+                                                                <StackPanel VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding Score}" FontSize="20" FontWeight="Bold"
+                                                                               Foreground="White" HorizontalAlignment="Center"/>
+                                                                    <TextBlock Text="{Binding Grade}" FontSize="12"
+                                                                               Foreground="White" HorizontalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Border>
+
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding DateDisplay}" FontSize="16" FontWeight="SemiBold"
+                                                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                                <TextBlock Text="{Binding ScoreDisplay}" FontSize="12"
+                                                                           Foreground="{StaticResource TextSecondaryBrush}"/>
+                                                            </StackPanel>
+
+                                                            <TextBlock Grid.Column="3" Text="→" FontSize="24"
+                                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                                       VerticalAlignment="Center"/>
+
+                                                            <Grid.InputBindings>
+                                                                <MouseBinding MouseAction="LeftClick" 
+                                                                              Command="{Binding DataContext.SelectHistoryScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                              CommandParameter="{Binding}"/>
+                                                            </Grid.InputBindings>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </Grid>
 
@@ -611,7 +812,8 @@
                 </TextBlock>
 
                 <StackPanel Grid.Row="1">
-                    <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,20">
+                    <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,20"
+                            Height="{StaticResource CompactPanelHeight}">
                         <StackPanel>
                             <TextBlock Text="{Binding ReportsDirectoryTitle}" FontWeight="Bold" FontSize="16"
                                        Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
@@ -642,12 +844,13 @@
                             <TextBlock Text="{Binding LanguageDescription}"
                                        FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,15"/>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding LanguageLabel}" Foreground="{StaticResource TextSecondaryBrush}"
+                                <TextBlock Text="{Binding LanguageLabel}" Foreground="Black"
                                            VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <ComboBox ItemsSource="{Binding AvailableLanguages}"
                                           SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
                                           DisplayMemberPath="DisplayName"
-                                          Width="200"/>
+                                          Width="200"
+                                          Foreground="Black"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>

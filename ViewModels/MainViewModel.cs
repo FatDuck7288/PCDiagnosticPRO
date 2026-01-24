@@ -1,18 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System.Windows.Media;
+using System.Windows.Data;
 using PCDiagnosticPro.Models;
 using PCDiagnosticPro.Services;
 
@@ -34,6 +38,7 @@ namespace PCDiagnosticPro.ViewModels
         private Process? _scanProcess;
         private CancellationTokenSource? _scanCts;
         private readonly object _scanLock = new object();
+        private bool _cancelHandled;
 
         // Chemins relatifs
         private readonly string _baseDir = AppContext.BaseDirectory;
@@ -110,7 +115,26 @@ namespace PCDiagnosticPro.ViewModels
                 ["StatusScanError"] = "❌ Erreur lors de l'analyse",
                 ["StatusJsonMissing"] = "⚠️ Scan terminé mais rapport JSON introuvable",
                 ["StatusParsingError"] = "⚠️ Analyse terminée avec des erreurs",
-                ["StatusLoadReportError"] = "⚠️ Erreur lors du chargement du rapport"
+                ["StatusLoadReportError"] = "⚠️ Erreur lors du chargement du rapport",
+                ["ArchivesButtonText"] = "Archives",
+                ["ArchivesTitle"] = "Archives",
+                ["ArchiveMenuText"] = "Archiver",
+                ["DeleteMenuText"] = "Supprimer",
+                ["ScoreLegendTitle"] = "Légende / Calcul du score",
+                ["ScoreRulesTitle"] = "Règles de score",
+                ["ScoreGradesTitle"] = "Grades",
+                ["ScoreRuleInitial"] = "• Score initial : 100",
+                ["ScoreRuleCritical"] = "• Erreurs critiques : criticalCount × 25 (−25 par critique)",
+                ["ScoreRuleError"] = "• Erreurs : errorCount × 10 (−10 par erreur)",
+                ["ScoreRuleWarning"] = "• Avertissements : warningCount × 5 (−5 par avertissement)",
+                ["ScoreRuleMin"] = "• Score min : 0",
+                ["ScoreRuleMax"] = "• Score max : 100",
+                ["ScoreGradeA"] = "• ❤️ ≥ 90 : A",
+                ["ScoreGradeB"] = "• 👍 ≥ 75 et < 90 : B",
+                ["ScoreGradeC"] = "• ⚠️ ≥ 60 et < 75 : C",
+                ["ScoreGradeD"] = "• 💀 < 60 : D",
+                ["DeleteScanConfirmTitle"] = "Confirmation",
+                ["DeleteScanConfirmMessage"] = "Voulez-vous vraiment supprimer ce scan ?"
             },
             ["en"] = new Dictionary<string, string>
             {
@@ -172,7 +196,26 @@ namespace PCDiagnosticPro.ViewModels
                 ["StatusScanError"] = "❌ Error during scan",
                 ["StatusJsonMissing"] = "⚠️ Scan completed but JSON report not found",
                 ["StatusParsingError"] = "⚠️ Scan completed with errors",
-                ["StatusLoadReportError"] = "⚠️ Error while loading the report"
+                ["StatusLoadReportError"] = "⚠️ Error while loading the report",
+                ["ArchivesButtonText"] = "Archives",
+                ["ArchivesTitle"] = "Archives",
+                ["ArchiveMenuText"] = "Archive",
+                ["DeleteMenuText"] = "Delete",
+                ["ScoreLegendTitle"] = "Legend / Score calculation",
+                ["ScoreRulesTitle"] = "Score rules",
+                ["ScoreGradesTitle"] = "Grades",
+                ["ScoreRuleInitial"] = "• Starting score: 100",
+                ["ScoreRuleCritical"] = "• Critical errors: criticalCount × 25 (-25 per critical)",
+                ["ScoreRuleError"] = "• Errors: errorCount × 10 (-10 per error)",
+                ["ScoreRuleWarning"] = "• Warnings: warningCount × 5 (-5 per warning)",
+                ["ScoreRuleMin"] = "• Minimum score: 0",
+                ["ScoreRuleMax"] = "• Maximum score: 100",
+                ["ScoreGradeA"] = "• ❤️ ≥ 90 : A",
+                ["ScoreGradeB"] = "• 👍 ≥ 75 and < 90 : B",
+                ["ScoreGradeC"] = "• ⚠️ ≥ 60 and < 75 : C",
+                ["ScoreGradeD"] = "• 💀 < 60 : D",
+                ["DeleteScanConfirmTitle"] = "Confirmation",
+                ["DeleteScanConfirmMessage"] = "Do you really want to delete this scan?"
             },
             ["es"] = new Dictionary<string, string>
             {
@@ -234,7 +277,26 @@ namespace PCDiagnosticPro.ViewModels
                 ["StatusScanError"] = "❌ Error durante el análisis",
                 ["StatusJsonMissing"] = "⚠️ Escaneo completado pero no se encontró el informe JSON",
                 ["StatusParsingError"] = "⚠️ Análisis completado con errores",
-                ["StatusLoadReportError"] = "⚠️ Error al cargar el informe"
+                ["StatusLoadReportError"] = "⚠️ Error al cargar el informe",
+                ["ArchivesButtonText"] = "Archivos",
+                ["ArchivesTitle"] = "Archivos",
+                ["ArchiveMenuText"] = "Archivar",
+                ["DeleteMenuText"] = "Eliminar",
+                ["ScoreLegendTitle"] = "Leyenda / Cálculo del puntaje",
+                ["ScoreRulesTitle"] = "Reglas de puntaje",
+                ["ScoreGradesTitle"] = "Calificaciones",
+                ["ScoreRuleInitial"] = "• Puntaje inicial: 100",
+                ["ScoreRuleCritical"] = "• Errores críticos: criticalCount × 25 (-25 por crítico)",
+                ["ScoreRuleError"] = "• Errores: errorCount × 10 (-10 por error)",
+                ["ScoreRuleWarning"] = "• Advertencias: warningCount × 5 (-5 por advertencia)",
+                ["ScoreRuleMin"] = "• Puntaje mínimo: 0",
+                ["ScoreRuleMax"] = "• Puntaje máximo: 100",
+                ["ScoreGradeA"] = "• ❤️ ≥ 90 : A",
+                ["ScoreGradeB"] = "• 👍 ≥ 75 y < 90 : B",
+                ["ScoreGradeC"] = "• ⚠️ ≥ 60 y < 75 : C",
+                ["ScoreGradeD"] = "• 💀 < 60 : D",
+                ["DeleteScanConfirmTitle"] = "Confirmación",
+                ["DeleteScanConfirmMessage"] = "¿Desea eliminar este escaneo?"
             }
         };
 
@@ -258,6 +320,8 @@ namespace PCDiagnosticPro.ViewModels
                     OnPropertyChanged(nameof(IsSettingsView));
                     OnPropertyChanged(nameof(IsHealthcheckView));
                     OnPropertyChanged(nameof(IsChatView));
+                    OnPropertyChanged(nameof(IsViewingHistoryDetail));
+                    OnPropertyChanged(nameof(IsViewingHistoryList));
                 }
             }
         }
@@ -283,6 +347,7 @@ namespace PCDiagnosticPro.ViewModels
                     OnPropertyChanged(nameof(CanStartScan));
                     OnPropertyChanged(nameof(ShowScanButtons));
                     OnPropertyChanged(nameof(HasAnyScan));
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -293,7 +358,7 @@ namespace PCDiagnosticPro.ViewModels
         public bool IsError => ScanState == "Error";
         public bool CanStartScan => !IsScanning;
         public bool ShowScanButtons => IsCompleted || IsError;
-        public bool HasAnyScan => ScanHistory.Count > 0;
+        public bool HasAnyScan => ScanHistory.Count > 0 || ArchivedScanHistory.Count > 0;
 
         private int _progress;
         public int Progress
@@ -369,6 +434,7 @@ namespace PCDiagnosticPro.ViewModels
                 if (SetProperty(ref _selectedHistoryScan, value))
                 {
                     OnPropertyChanged(nameof(IsViewingHistoryDetail));
+                    OnPropertyChanged(nameof(IsViewingHistoryList));
                     OnPropertyChanged(nameof(SelectedScanDateDisplay));
                     if (value != null && value.Result != null)
                     {
@@ -380,6 +446,21 @@ namespace PCDiagnosticPro.ViewModels
         }
 
         public bool IsViewingHistoryDetail => SelectedHistoryScan != null && IsResultsView;
+
+        private bool _isViewingArchives;
+        public bool IsViewingArchives
+        {
+            get => _isViewingArchives;
+            set
+            {
+                if (SetProperty(ref _isViewingArchives, value))
+                {
+                    OnPropertyChanged(nameof(IsViewingHistoryList));
+                }
+            }
+        }
+
+        public bool IsViewingHistoryList => !IsViewingHistoryDetail && !IsViewingArchives && IsResultsView;
 
         private bool _isAdmin;
         public bool IsAdmin
@@ -527,6 +608,23 @@ namespace PCDiagnosticPro.ViewModels
         public string LanguageTitle => GetString("LanguageTitle");
         public string LanguageDescription => GetString("LanguageDescription");
         public string LanguageLabel => GetString("LanguageLabel");
+        public string ArchivesButtonText => GetString("ArchivesButtonText");
+        public string ArchivesTitle => GetString("ArchivesTitle");
+        public string ArchiveMenuText => GetString("ArchiveMenuText");
+        public string DeleteMenuText => GetString("DeleteMenuText");
+        public string ScoreLegendTitle => GetString("ScoreLegendTitle");
+        public string ScoreRulesTitle => GetString("ScoreRulesTitle");
+        public string ScoreGradesTitle => GetString("ScoreGradesTitle");
+        public string ScoreRuleInitial => GetString("ScoreRuleInitial");
+        public string ScoreRuleCritical => GetString("ScoreRuleCritical");
+        public string ScoreRuleError => GetString("ScoreRuleError");
+        public string ScoreRuleWarning => GetString("ScoreRuleWarning");
+        public string ScoreRuleMin => GetString("ScoreRuleMin");
+        public string ScoreRuleMax => GetString("ScoreRuleMax");
+        public string ScoreGradeA => GetString("ScoreGradeA");
+        public string ScoreGradeB => GetString("ScoreGradeB");
+        public string ScoreGradeC => GetString("ScoreGradeC");
+        public string ScoreGradeD => GetString("ScoreGradeD");
         public string SelectedScanDateDisplay => SelectedHistoryScan != null
             ? string.Format(GetString("ResultsScanDateFormat"), SelectedHistoryScan.DateDisplay)
             : string.Empty;
@@ -535,6 +633,8 @@ namespace PCDiagnosticPro.ViewModels
         public ObservableCollection<string> LiveFeedItems { get; } = new ObservableCollection<string>();
         public ObservableCollection<ScanItem> ScanItems { get; } = new ObservableCollection<ScanItem>();
         public ObservableCollection<ScanHistoryItem> ScanHistory { get; } = new ObservableCollection<ScanHistoryItem>();
+        public ObservableCollection<ScanHistoryItem> ArchivedScanHistory { get; } = new ObservableCollection<ScanHistoryItem>();
+        public ICollectionView ArchivedScanHistoryView { get; }
 
         #endregion
 
@@ -554,6 +654,9 @@ namespace PCDiagnosticPro.ViewModels
         public ICommand SaveSettingsCommand { get; }
         public ICommand SelectHistoryScanCommand { get; }
         public ICommand BackToHistoryCommand { get; }
+        public ICommand NavigateToArchivesCommand { get; }
+        public ICommand ArchiveScanCommand { get; }
+        public ICommand DeleteScanCommand { get; }
 
         #endregion
 
@@ -564,6 +667,10 @@ namespace PCDiagnosticPro.ViewModels
             _powerShellService = new PowerShellService();
             _reportParserService = new ReportParserService();
             _scanStopwatch = new Stopwatch();
+
+            ArchivedScanHistoryView = CollectionViewSource.GetDefaultView(ArchivedScanHistory);
+            ArchivedScanHistoryView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ScanHistoryItem.MonthYearDisplay)));
+            ArchivedScanHistoryView.SortDescriptions.Add(new SortDescription(nameof(ScanHistoryItem.ScanDate), ListSortDirection.Descending));
 
             _liveFeedTimer = new DispatcherTimer
             {
@@ -603,15 +710,21 @@ namespace PCDiagnosticPro.ViewModels
             OpenReportCommand = new RelayCommand(OpenReport, () => HasScanResult);
             RestartAsAdminCommand = new RelayCommand(RestartAsAdmin);
             ExportResultsCommand = new RelayCommand(ExportResults, () => HasScanResult);
-            NavigateToScannerCommand = new RelayCommand(() => { CurrentView = "Home"; SelectedHistoryScan = null; });
-            NavigateToResultsCommand = new RelayCommand(() => { CurrentView = "Results"; SelectedHistoryScan = null; }, () => HasAnyScan);
-            NavigateToSettingsCommand = new RelayCommand(() => { CurrentView = "Settings"; SelectedHistoryScan = null; });
-            NavigateToHealthcheckCommand = new RelayCommand(() => { CurrentView = "Healthcheck"; SelectedHistoryScan = null; });
-            NavigateToChatCommand = new RelayCommand(() => { CurrentView = "Chat"; SelectedHistoryScan = null; });
+            NavigateToScannerCommand = new RelayCommand(() => { CurrentView = "Home"; SelectedHistoryScan = null; IsViewingArchives = false; });
+            NavigateToResultsCommand = new RelayCommand(() => { CurrentView = "Results"; SelectedHistoryScan = null; IsViewingArchives = false; }, () => HasAnyScan);
+            NavigateToSettingsCommand = new RelayCommand(() => { CurrentView = "Settings"; SelectedHistoryScan = null; IsViewingArchives = false; });
+            NavigateToHealthcheckCommand = new RelayCommand(() => { CurrentView = "Healthcheck"; SelectedHistoryScan = null; IsViewingArchives = false; });
+            NavigateToChatCommand = new RelayCommand(() => { CurrentView = "Chat"; SelectedHistoryScan = null; IsViewingArchives = false; });
             BrowseReportDirectoryCommand = new RelayCommand(BrowseReportDirectory);
             SaveSettingsCommand = new RelayCommand(SaveSettings, () => IsSettingsDirty);
             SelectHistoryScanCommand = new RelayCommand<ScanHistoryItem>(SelectHistoryScan);
             BackToHistoryCommand = new RelayCommand(BackToHistory);
+            NavigateToArchivesCommand = new RelayCommand(NavigateToArchives, () => ScanHistory.Count > 0 || ArchivedScanHistory.Count > 0);
+            ArchiveScanCommand = new RelayCommand<ScanHistoryItem>(ArchiveScan, item => item != null);
+            DeleteScanCommand = new RelayCommand<ScanHistoryItem>(DeleteScan, item => item != null);
+
+            ScanHistory.CollectionChanged += OnHistoryCollectionChanged;
+            ArchivedScanHistory.CollectionChanged += OnHistoryCollectionChanged;
 
             // S'abonner aux événements
             _powerShellService.OutputReceived += OnOutputReceived;
@@ -695,6 +808,7 @@ namespace PCDiagnosticPro.ViewModels
                 LiveFeedItems.Clear();
                 ScanItems.Clear();
                 ScanResult = null;
+                _cancelHandled = false;
 
                 _scanStopwatch.Restart();
                 _liveFeedTimer.Start();
@@ -782,11 +896,11 @@ namespace PCDiagnosticPro.ViewModels
             }
             catch (OperationCanceledException)
             {
-                _scanStopwatch.Stop();
-                _liveFeedTimer.Stop();
-                StatusMessage = GetString("StatusCanceled");
-                ScanState = "Idle";
-                AddLiveFeedItem("⏹️ Analyse annulée");
+                if (!_cancelHandled)
+                {
+                    ResetAfterCancel();
+                    _cancelHandled = true;
+                }
                 App.LogMessage("Scan annulé");
             }
             catch (Exception ex)
@@ -837,7 +951,7 @@ namespace PCDiagnosticPro.ViewModels
         {
             try
             {
-                var jsonContent = await File.ReadAllTextAsync(_resultJsonPath);
+                var jsonContent = await File.ReadAllTextAsync(_resultJsonPath, Encoding.UTF8);
                 var jsonDoc = JsonDocument.Parse(jsonContent);
                 var root = jsonDoc.RootElement;
 
@@ -967,23 +1081,32 @@ namespace PCDiagnosticPro.ViewModels
                     }
                 }
 
-                _scanStopwatch.Stop();
-                _liveFeedTimer.Stop();
-                
-                // Reset UI
-                Progress = 0;
-                ProgressCount = 0;
-                CurrentStep = GetString("ReadyToScan");
-                CurrentSection = string.Empty;
-                StatusMessage = GetString("StatusCanceled");
-                ScanState = "Idle";
-                AddLiveFeedItem("⏹️ Analyse annulée");
+                if (!_cancelHandled)
+                {
+                    ResetAfterCancel();
+                    _cancelHandled = true;
+                }
                 App.LogMessage("Scan annulé");
             }
             catch (Exception ex)
             {
                 App.LogMessage($"Erreur annulation: {ex.Message}");
             }
+        }
+
+        private void ResetAfterCancel()
+        {
+            _scanStopwatch.Stop();
+            _liveFeedTimer.Stop();
+
+            // Reset UI
+            Progress = 0;
+            ProgressCount = 0;
+            CurrentStep = GetString("ReadyToScan");
+            CurrentSection = string.Empty;
+            StatusMessage = GetString("StatusCanceled");
+            ScanState = "Idle";
+            AddLiveFeedItem("⏹️ Analyse annulée");
         }
 
         private void OpenReport()
@@ -993,6 +1116,7 @@ namespace PCDiagnosticPro.ViewModels
                 CurrentView = "Results";
                 if (ScanHistory.Count > 0)
                 {
+                    IsViewingArchives = false;
                     SelectedHistoryScan = ScanHistory[0];
                 }
             }
@@ -1002,6 +1126,7 @@ namespace PCDiagnosticPro.ViewModels
         {
             if (item != null)
             {
+                IsViewingArchives = false;
                 SelectedHistoryScan = item;
             }
         }
@@ -1009,6 +1134,59 @@ namespace PCDiagnosticPro.ViewModels
         private void BackToHistory()
         {
             SelectedHistoryScan = null;
+            IsViewingArchives = false;
+        }
+
+        private void NavigateToArchives()
+        {
+            SelectedHistoryScan = null;
+            IsViewingArchives = true;
+        }
+
+        private void ArchiveScan(ScanHistoryItem? item)
+        {
+            if (item == null) return;
+
+            if (ScanHistory.Remove(item))
+            {
+                ArchivedScanHistory.Insert(0, item);
+                SelectedHistoryScan = null;
+                IsViewingArchives = true;
+                OnPropertyChanged(nameof(HasAnyScan));
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        private void DeleteScan(ScanHistoryItem? item)
+        {
+            if (item == null) return;
+
+            var confirmation = MessageBox.Show(
+                GetString("DeleteScanConfirmMessage"),
+                GetString("DeleteScanConfirmTitle"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmation != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            if (SelectedHistoryScan == item)
+            {
+                SelectedHistoryScan = null;
+            }
+
+            if (ScanHistory.Remove(item))
+            {
+                OnPropertyChanged(nameof(HasAnyScan));
+            }
+            else if (ArchivedScanHistory.Remove(item))
+            {
+                OnPropertyChanged(nameof(HasAnyScan));
+            }
+
+            CommandManager.InvalidateRequerySuggested();
         }
 
         private void RestartAsAdmin()
@@ -1038,7 +1216,7 @@ namespace PCDiagnosticPro.ViewModels
 
                 if (dialog.ShowDialog() == true)
                 {
-                    File.WriteAllText(dialog.FileName, ScanResult.RawReport);
+                    File.WriteAllText(dialog.FileName, ScanResult.RawReport, Encoding.UTF8);
                     MessageBox.Show("Rapport exporté avec succès!", "Exportation", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -1075,7 +1253,7 @@ namespace PCDiagnosticPro.ViewModels
                 };
 
                 var jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_configPath, jsonContent);
+                File.WriteAllText(_configPath, jsonContent, Encoding.UTF8);
                 
                 IsSettingsDirty = false;
                 App.LogMessage("Paramètres sauvegardés");
@@ -1096,7 +1274,7 @@ namespace PCDiagnosticPro.ViewModels
 
                 if (File.Exists(_configPath))
                 {
-                    var jsonContent = File.ReadAllText(_configPath);
+                    var jsonContent = File.ReadAllText(_configPath, Encoding.UTF8);
                     var jsonDoc = JsonDocument.Parse(jsonContent);
                     var root = jsonDoc.RootElement;
 
@@ -1200,6 +1378,23 @@ namespace PCDiagnosticPro.ViewModels
                 nameof(LanguageTitle),
                 nameof(LanguageDescription),
                 nameof(LanguageLabel),
+                nameof(ArchivesButtonText),
+                nameof(ArchivesTitle),
+                nameof(ArchiveMenuText),
+                nameof(DeleteMenuText),
+                nameof(ScoreLegendTitle),
+                nameof(ScoreRulesTitle),
+                nameof(ScoreGradesTitle),
+                nameof(ScoreRuleInitial),
+                nameof(ScoreRuleCritical),
+                nameof(ScoreRuleError),
+                nameof(ScoreRuleWarning),
+                nameof(ScoreRuleMin),
+                nameof(ScoreRuleMax),
+                nameof(ScoreGradeA),
+                nameof(ScoreGradeB),
+                nameof(ScoreGradeC),
+                nameof(ScoreGradeD),
                 nameof(SelectedScanDateDisplay)
             };
 
@@ -1252,6 +1447,13 @@ namespace PCDiagnosticPro.ViewModels
             ElapsedTime = _scanStopwatch.Elapsed.ToString(@"mm\:ss");
         }
 
+        private void OnHistoryCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(HasAnyScan));
+            ArchivedScanHistoryView.Refresh();
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         #endregion
     }
 
@@ -1264,7 +1466,9 @@ namespace PCDiagnosticPro.ViewModels
         public int Score { get; set; }
         public string Grade { get; set; } = "N/A";
         public ScanResult? Result { get; set; }
-        public string DateDisplay => ScanDate.ToString("dd/MM/yyyy HH:mm");
+        public string DateDisplay => ScanDate.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture);
+        public string DayDisplay => ScanDate.ToString("dd", CultureInfo.CurrentCulture);
+        public string MonthYearDisplay => ScanDate.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
         public string ScoreDisplay => $"{Score}/100 ({Grade})";
     }
 }
