@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using PCDiagnosticPro.Models;
 
 namespace PCDiagnosticPro.Services
@@ -18,6 +19,7 @@ namespace PCDiagnosticPro.Services
         
         private static readonly string[] ReportPatterns = new[]
         {
+            "scan_result.json",
             "*_Scan_*.txt",
             "*_Report_*.txt",
             "*_Diagnostic_*.txt",
@@ -44,13 +46,22 @@ namespace PCDiagnosticPro.Services
                     catch { }
                 }
 
-                // Chercher aussi tous les fichiers .txt récents (moins de 24h)
+                // Chercher aussi tous les fichiers .txt/.json récents (moins de 24h)
                 try
                 {
                     var recentTxtFiles = Directory.GetFiles(ReportDirectory, "*.txt", SearchOption.TopDirectoryOnly)
                         .Select(f => new FileInfo(f))
                         .Where(f => f.LastWriteTime > DateTime.Now.AddHours(-24));
                     reports.AddRange(recentTxtFiles);
+                }
+                catch { }
+
+                try
+                {
+                    var recentJsonFiles = Directory.GetFiles(ReportDirectory, "*.json", SearchOption.TopDirectoryOnly)
+                        .Select(f => new FileInfo(f))
+                        .Where(f => f.LastWriteTime > DateTime.Now.AddHours(-24));
+                    reports.AddRange(recentJsonFiles);
                 }
                 catch { }
 
@@ -94,6 +105,12 @@ namespace PCDiagnosticPro.Services
                     return result;
                 }
 
+                if (Path.GetExtension(filePath).Equals(".json", StringComparison.OrdinalIgnoreCase))
+                {
+                    ParseJsonReport(filePath, result);
+                    return result;
+                }
+
                 result.RawReport = ReadReportText(filePath);
                 result.IsValid = true;
 
@@ -120,6 +137,71 @@ namespace PCDiagnosticPro.Services
             }
 
             return result;
+        }
+
+        private static void ParseJsonReport(string filePath, ScanResult result)
+        {
+            var jsonContent = File.ReadAllText(filePath, Encoding.UTF8);
+            result.RawReport = jsonContent;
+            result.ReportFilePath = filePath;
+
+            using var jsonDoc = JsonDocument.Parse(jsonContent);
+            var root = jsonDoc.RootElement;
+
+            result.IsValid = true;
+
+            if (root.TryGetProperty("summary", out var summaryEl))
+            {
+                result.Summary.Score = summaryEl.TryGetProperty("score", out var scoreEl) ? scoreEl.GetInt32() : 0;
+                result.Summary.Grade = summaryEl.TryGetProperty("grade", out var gradeEl) ? gradeEl.GetString() ?? "N/A" : "N/A";
+                result.Summary.CriticalCount = summaryEl.TryGetProperty("criticalCount", out var critEl) ? critEl.GetInt32() : 0;
+                result.Summary.ErrorCount = summaryEl.TryGetProperty("errorCount", out var errEl) ? errEl.GetInt32() : 0;
+                result.Summary.WarningCount = summaryEl.TryGetProperty("warningCount", out var warnEl) ? warnEl.GetInt32() : 0;
+
+                if (summaryEl.TryGetProperty("scanDate", out var dateEl))
+                {
+                    if (DateTimeOffset.TryParse(dateEl.GetString(), out var parsedDate))
+                    {
+                        result.Summary.ScanDate = parsedDate.LocalDateTime;
+                    }
+                }
+            }
+
+            if (root.TryGetProperty("items", out var itemsEl) && itemsEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var itemEl in itemsEl.EnumerateArray())
+                {
+                    var severityStr = itemEl.TryGetProperty("severity", out var sevEl) ? sevEl.GetString() ?? "Info" : "Info";
+                    var severity = severityStr switch
+                    {
+                        "Critical" => ScanSeverity.Critical,
+                        "Major" => ScanSeverity.Error,
+                        "Minor" => ScanSeverity.Warning,
+                        _ => ScanSeverity.Info
+                    };
+
+                    var status = severity switch
+                    {
+                        ScanSeverity.Critical => "CRITIQUE",
+                        ScanSeverity.Error => "ERREUR",
+                        ScanSeverity.Warning => "AVERTISSEMENT",
+                        _ => "INFO"
+                    };
+
+                    result.Items.Add(new ScanItem
+                    {
+                        Category = itemEl.TryGetProperty("category", out var catEl) ? catEl.GetString() ?? "" : "",
+                        Name = itemEl.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? "" : "",
+                        Severity = severity,
+                        Status = status,
+                        Detail = itemEl.TryGetProperty("detail", out var detEl) ? detEl.GetString() ?? "" : "",
+                        Recommendation = itemEl.TryGetProperty("recommendation", out var recEl) ? recEl.GetString() ?? "" : ""
+                    });
+                }
+            }
+
+            result.Summary.TotalItems = result.Items.Count;
+            result.Summary.OkCount = result.Items.Count(item => item.Severity == ScanSeverity.Info);
         }
 
         private static string ReadReportText(string filePath)

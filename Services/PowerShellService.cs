@@ -19,8 +19,9 @@ namespace PCDiagnosticPro.Services
         public event Action<int>? ExitCodeReceived;
 
         // Regex pour détecter les marqueurs de progression
-        private static readonly Regex ProgressRegex = new(@"PROGRESS:\s*(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex ProgressRegex = new(@"PROGRESS\|(\d+)\|(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex StepRegex = new(@"STEP:\s*(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private const int ScriptTotalSteps = 27;
 
         // Étapes connues pour simulation de progression
         private static readonly string[] KnownSteps = new[]
@@ -173,10 +174,15 @@ namespace PCDiagnosticPro.Services
 
             // Vérifier les marqueurs de progression
             var progressMatch = ProgressRegex.Match(line);
-            if (progressMatch.Success && int.TryParse(progressMatch.Groups[1].Value, out int progress))
+            if (progressMatch.Success && int.TryParse(progressMatch.Groups[1].Value, out int progressStep))
             {
-                _simulatedProgress = Math.Min(progress, 100);
+                var normalized = ScriptTotalSteps > 0
+                    ? (int)Math.Round(Math.Min(progressStep, ScriptTotalSteps) / (double)ScriptTotalSteps * 100)
+                    : Math.Min(progressStep, 100);
+
+                _simulatedProgress = Math.Min(normalized, 100);
                 ProgressChanged?.Invoke(_simulatedProgress);
+                StepChanged?.Invoke(progressMatch.Groups[2].Value.Trim());
             }
 
             var stepMatch = StepRegex.Match(line);

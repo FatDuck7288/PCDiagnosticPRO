@@ -766,12 +766,15 @@ namespace PCDiagnosticPro.ViewModels
                     return;
                 }
 
+                var outputDir = string.IsNullOrWhiteSpace(ReportDirectory) ? _reportsDir : ReportDirectory;
+                _resultJsonPath = Path.Combine(outputDir, "scan_result.json");
+
                 // Vérifier/Créer le dossier Rapports
-                if (!Directory.Exists(_reportsDir))
+                if (!Directory.Exists(outputDir))
                 {
                     try
                     {
-                        Directory.CreateDirectory(_reportsDir);
+                        Directory.CreateDirectory(outputDir);
                     }
                     catch (Exception ex)
                     {
@@ -827,7 +830,7 @@ namespace PCDiagnosticPro.ViewModels
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{_scriptPath}\" -OutputDir \"{_reportsDir}\"",
+                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{_scriptPath}\" -OutputDir \"{outputDir}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -963,7 +966,9 @@ namespace PCDiagnosticPro.ViewModels
                         ScanDate = DateTime.Now,
                         ScanDuration = _scanStopwatch.Elapsed
                     },
-                    Items = new List<ScanItem>()
+                    Items = new List<ScanItem>(),
+                    RawReport = jsonContent,
+                    ReportFilePath = _resultJsonPath
                 };
 
                 // Parser summary
@@ -974,6 +979,14 @@ namespace PCDiagnosticPro.ViewModels
                     result.Summary.CriticalCount = summaryEl.TryGetProperty("criticalCount", out var critEl) ? critEl.GetInt32() : 0;
                     result.Summary.ErrorCount = summaryEl.TryGetProperty("errorCount", out var errEl) ? errEl.GetInt32() : 0;
                     result.Summary.WarningCount = summaryEl.TryGetProperty("warningCount", out var warnEl) ? warnEl.GetInt32() : 0;
+
+                    if (summaryEl.TryGetProperty("scanDate", out var dateEl))
+                    {
+                        if (DateTimeOffset.TryParse(dateEl.GetString(), out var parsedDate))
+                        {
+                            result.Summary.ScanDate = parsedDate.LocalDateTime;
+                        }
+                    }
                 }
 
                 // Parser items
@@ -990,16 +1003,28 @@ namespace PCDiagnosticPro.ViewModels
                             _ => ScanSeverity.Info
                         };
 
+                        var status = severity switch
+                        {
+                            ScanSeverity.Critical => "CRITIQUE",
+                            ScanSeverity.Error => "ERREUR",
+                            ScanSeverity.Warning => "AVERTISSEMENT",
+                            _ => "INFO"
+                        };
+
                         result.Items.Add(new ScanItem
                         {
                             Category = itemEl.TryGetProperty("category", out var catEl) ? catEl.GetString() ?? "" : "",
                             Name = itemEl.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? "" : "",
                             Severity = severity,
+                            Status = status,
                             Detail = itemEl.TryGetProperty("detail", out var detEl) ? detEl.GetString() ?? "" : "",
                             Recommendation = itemEl.TryGetProperty("recommendation", out var recEl) ? recEl.GetString() ?? "" : ""
                         });
                     }
                 }
+
+                result.Summary.TotalItems = result.Items.Count;
+                result.Summary.OkCount = result.Items.Count(item => item.Severity == ScanSeverity.Info);
 
                 ScanResult = result;
                 UpdateScanItemsFromResult(result);
