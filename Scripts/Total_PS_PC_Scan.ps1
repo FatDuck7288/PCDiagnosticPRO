@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Script de diagnostic système complet pour PC Diagnostic Pro
@@ -16,6 +16,10 @@ param(
 # Configuration
 $ErrorActionPreference = "SilentlyContinue"
 $ProgressPreference = "SilentlyContinue"
+
+# Encodage UTF-8 (script + sortie) pour éviter les caractères corrompus
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
 
 # Initialisation
 $script:stepCount = 0
