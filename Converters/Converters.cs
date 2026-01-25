@@ -298,10 +298,39 @@ namespace PCDiagnosticPro.Converters
             }
 
             var center = new Point(radius, radius);
+            var startPoint = new Point(center.X, center.Y - radius);
+            if (percent >= 100.0)
+            {
+                var midPoint = new Point(center.X, center.Y + radius);
+                var fullFigure = new PathFigure
+                {
+                    StartPoint = startPoint,
+                    IsClosed = false,
+                    IsFilled = false
+                };
+                fullFigure.Segments.Add(new ArcSegment
+                {
+                    Point = midPoint,
+                    Size = new Size(radius, radius),
+                    SweepDirection = SweepDirection.Clockwise,
+                    IsLargeArc = false
+                });
+                fullFigure.Segments.Add(new ArcSegment
+                {
+                    Point = startPoint,
+                    Size = new Size(radius, radius),
+                    SweepDirection = SweepDirection.Clockwise,
+                    IsLargeArc = false
+                });
+
+                var fullGeometry = new PathGeometry();
+                fullGeometry.Figures.Add(fullFigure);
+                return fullGeometry;
+            }
+
             var angle = percent / 100.0 * 360.0;
             var radians = angle * Math.PI / 180.0;
 
-            var startPoint = new Point(center.X, center.Y - radius);
             var endPoint = new Point(
                 center.X + radius * Math.Sin(radians),
                 center.Y - radius * Math.Cos(radians));

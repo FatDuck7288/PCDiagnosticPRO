@@ -12,5 +12,14 @@ namespace PCDiagnosticPro
             InitializeComponent();
             App.LogMessage("MainWindow initialisé");
         }
+
+        private void OpenContextMenu(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.ContextMenu != null)
+            {
+                element.ContextMenu.PlacementTarget = element;
+                element.ContextMenu.IsOpen = true;
+            }
+        }
     }
 }

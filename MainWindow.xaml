@@ -321,98 +321,105 @@
                                 </Ellipse.Triggers>
                             </Ellipse>
 
-                            <Button Width="220" Height="220" 
-                                    Command="{Binding StartScanCommand}"
-                                    IsEnabled="{Binding CanStartScan}"
-                                    Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Grid>
-                                            <Ellipse x:Name="ButtonBackground">
-                                                <Ellipse.Fill>
-                                                    <RadialGradientBrush GradientOrigin="0.3,0.3">
-                                                        <GradientStop Color="#FF2D333B" Offset="0"/>
-                                                        <GradientStop Color="#FF161B22" Offset="1"/>
-                                                    </RadialGradientBrush>
-                                                </Ellipse.Fill>
-                                                <Ellipse.Effect>
-                                                    <DropShadowEffect Color="{StaticResource AccentRed}" 
-                                                                      BlurRadius="30" ShadowDepth="0" Opacity="0.5"/>
-                                                </Ellipse.Effect>
-                                            </Ellipse>
-                                            
-                                            <Ellipse Stroke="{StaticResource AccentRedBrush}" 
-                                                     StrokeThickness="2" Margin="10"/>
-                                            
-                                            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <StackPanel Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisibility}}">
-                                                    <TextBlock Text="{Binding ScanButtonText}" FontSize="22" FontWeight="Bold"
-                                                               Foreground="{StaticResource TextPrimaryBrush}"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding ScanButtonSubtext}" FontSize="10"
-                                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
-                                                </StackPanel>
-                                                
-                                                <StackPanel Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}">
-                                                    <TextBlock Text="{Binding Progress, StringFormat={}{0}%}" 
-                                                               FontSize="42" FontWeight="Bold"
-                                                               Foreground="{StaticResource AccentRedBrush}"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding CurrentStep}" 
-                                                               FontSize="10" Margin="0,5,0,10"
-                                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                                               HorizontalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               MaxWidth="160" TextAlignment="Center"/>
-                                                    <Button Content="{Binding CancelButtonText}" Width="60" Height="40"
-                                                            FontSize="12" Padding="0"
-                                                            Style="{StaticResource FuturisticButton}"
-                                                            Command="{Binding CancelScanCommand}"
-                                                            ToolTip="{Binding CancelButtonText}"/>
-                                                </StackPanel>
-                                                
-                                                <StackPanel Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVisibility}}"
-                                                            HorizontalAlignment="Center">
-                                                    <TextBlock Text="{Binding ScoreDisplay}" 
-                                                               FontSize="48" FontWeight="Bold"
-                                                               Foreground="{Binding GradeDisplay, Converter={StaticResource GradeToColor}}"
-                                                               HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="/100" FontSize="14"
-                                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                                               HorizontalAlignment="Center" Margin="0,-5,0,5"/>
-                                                    <Border CornerRadius="4" Padding="12,4"
-                                                            Background="{Binding GradeDisplay, Converter={StaticResource GradeToColor}}"
-                                                            HorizontalAlignment="Center">
-                                                        <TextBlock Text="{Binding GradeDisplay}" 
-                                                                   FontSize="18" FontWeight="Bold"
-                                                                   Foreground="White"/>
-                                                    </Border>
-                                                </StackPanel>
-                                                
-                                                <StackPanel Visibility="{Binding IsError, Converter={StaticResource BoolToVisibility}}"
-                                                            HorizontalAlignment="Center">
-                                                    <TextBlock Text="❌" FontSize="48" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Erreur" FontSize="14"
-                                                               Foreground="{StaticResource AccentRedBrush}"
-                                                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Grid>
-                                        
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="ButtonBackground" Property="Effect">
-                                                    <Setter.Value>
+                            <Grid Width="220" Height="220" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Button Command="{Binding StartScanCommand}"
+                                        IsEnabled="{Binding CanStartScan}"
+                                        Cursor="Hand">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Ellipse x:Name="ButtonBackground">
+                                                    <Ellipse.Fill>
+                                                        <RadialGradientBrush GradientOrigin="0.3,0.3">
+                                                            <GradientStop Color="#FF2D333B" Offset="0"/>
+                                                            <GradientStop Color="#FF161B22" Offset="1"/>
+                                                        </RadialGradientBrush>
+                                                    </Ellipse.Fill>
+                                                    <Ellipse.Effect>
                                                         <DropShadowEffect Color="{StaticResource AccentRed}" 
+                                                                          BlurRadius="30" ShadowDepth="0" Opacity="0.5"/>
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                                
+                                                <Ellipse Stroke="{StaticResource AccentRedBrush}" 
+                                                         StrokeThickness="2" Margin="10"/>
+                                            </Grid>
+                                            
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="ButtonBackground" Property="Effect">
+                                                        <Setter.Value>
+                                                            <DropShadowEffect Color="{StaticResource AccentRed}" 
                                                                           BlurRadius="50" ShadowDepth="0" Opacity="0.8"/>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <StackPanel Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisibility}}"
+                                                IsHitTestVisible="False">
+                                        <TextBlock Text="{Binding ScanButtonText}" FontSize="22" FontWeight="Bold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding ScanButtonSubtext}" FontSize="10"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}"
+                                                HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding Progress, StringFormat={}{0}%}" 
+                                                   FontSize="42" FontWeight="Bold"
+                                                   Foreground="{StaticResource AccentRedBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   IsHitTestVisible="False"/>
+                                        <TextBlock Text="{Binding CurrentStep}" 
+                                                   FontSize="10" Margin="0,5,0,10"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="160" TextAlignment="Center"
+                                                   IsHitTestVisible="False"/>
+                                        <Button Content="{Binding CancelButtonText}" Width="60" Height="40"
+                                                FontSize="12" Padding="0"
+                                                Style="{StaticResource FuturisticButton}"
+                                                Command="{Binding CancelScanCommand}"
+                                                ToolTip="{Binding CancelButtonText}"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Visibility="{Binding IsCompleted, Converter={StaticResource BoolToVisibility}}"
+                                                HorizontalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                        <TextBlock Text="{Binding ScoreDisplay}" 
+                                                   FontSize="48" FontWeight="Bold"
+                                                   Foreground="{Binding GradeDisplay, Converter={StaticResource GradeToColor}}"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="/100" FontSize="14"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   HorizontalAlignment="Center" Margin="0,-5,0,5"/>
+                                        <Border CornerRadius="4" Padding="12,4"
+                                                Background="{Binding GradeDisplay, Converter={StaticResource GradeToColor}}"
+                                                HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding GradeDisplay}" 
+                                                       FontSize="18" FontWeight="Bold"
+                                                       Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Visibility="{Binding IsError, Converter={StaticResource BoolToVisibility}}"
+                                                HorizontalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                        <TextBlock Text="❌" FontSize="48" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Erreur" FontSize="14"
+                                                   Foreground="{StaticResource AccentRedBrush}"
+                                                   HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -527,44 +534,22 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <Menu Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
-                                                  Background="Transparent">
-                                                <Menu.Resources>
-                                                    <Style TargetType="MenuItem">
-                                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                                                        <Setter Property="Background" Value="{StaticResource BackgroundMediumBrush}"/>
-                                                        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-                                                        <Setter Property="BorderThickness" Value="1"/>
-                                                        <Setter Property="Padding" Value="10,6"/>
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="MenuItem">
-                                                                    <Border Background="{TemplateBinding Background}"
-                                                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                                                            CornerRadius="6"
-                                                                            Padding="{TemplateBinding Padding}">
-                                                                        <ContentPresenter VerticalAlignment="Center"/>
-                                                                    </Border>
-                                                                    <ControlTemplate.Triggers>
-                                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter Property="Background" Value="{StaticResource AccentRedBrush}"/>
-                                                                        </Trigger>
-                                                                    </ControlTemplate.Triggers>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </Menu.Resources>
-                                                <MenuItem Header="⋯" FontSize="18" Foreground="{StaticResource TextPrimaryBrush}">
-                                                    <MenuItem Header="{Binding DataContext.ArchiveMenuText, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                              Command="{Binding DataContext.ArchiveScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                              CommandParameter="{Binding}"/>
-                                                    <MenuItem Header="{Binding DataContext.DeleteMenuText, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                              Command="{Binding DataContext.DeleteScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                              CommandParameter="{Binding}"/>
-                                                </MenuItem>
-                                            </Menu>
+                                            <Button Grid.Column="0" Width="32" Height="32" Margin="0,0,10,0"
+                                                    Content="⋯" FontSize="18" Padding="0"
+                                                    Style="{StaticResource FuturisticButton}"
+                                                    Click="OpenContextMenu"
+                                                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
+                                                <Button.ContextMenu>
+                                                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                        <MenuItem Header="{Binding ArchiveMenuText}"
+                                                                  Command="{Binding ArchiveScanCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="{Binding DeleteMenuText}"
+                                                                  Command="{Binding DeleteScanCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    </ContextMenu>
+                                                </Button.ContextMenu>
+                                            </Button>
 
                                             <Border Grid.Column="1" Width="60" Height="60" CornerRadius="8"
                                                     Background="{Binding Grade, Converter={StaticResource GradeToColor}}"
@@ -850,7 +835,29 @@
                                           SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
                                           DisplayMemberPath="DisplayName"
                                           Width="200"
-                                          Foreground="Black"/>
+                                          Foreground="Black"
+                                          Background="White">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="Black"/>
+                                            <Setter Property="Background" Value="White"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#FFE5E7EB"/>
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#FFD1D5DB"/>
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                    <Setter Property="Opacity" Value="0.7"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
                             </StackPanel>
                         </StackPanel>
                     </Border>
