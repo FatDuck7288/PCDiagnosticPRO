@@ -1,0 +1,7 @@
+LibreHardwareMonitor
+Copyright (c) 2020-2024 LibreHardwareMonitor contributors
+License: Mozilla Public License 2.0 (MPL-2.0)
+
+Source: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor
+
+This product includes LibreHardwareMonitorLib under the MPL-2.0 license.

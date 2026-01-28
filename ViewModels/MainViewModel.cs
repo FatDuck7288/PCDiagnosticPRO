@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Data;
 using PCDiagnosticPro.Models;
 using PCDiagnosticPro.Services;
+using VirtualIT.HardwareProbe;
 
 namespace PCDiagnosticPro.ViewModels
 {
@@ -29,13 +29,13 @@ namespace PCDiagnosticPro.ViewModels
     {
         #region Fields
 
-        private readonly PowerShellService _powerShellService;
         private readonly ReportParserService _reportParserService;
+        private readonly PowerShellRunner _powerShellRunner;
+        private readonly HardwareProbeService _hardwareProbeService;
+        private readonly FinalSnapshotBuilder _finalSnapshotBuilder;
         private readonly DispatcherTimer _liveFeedTimer;
         private readonly Stopwatch _scanStopwatch;
 
-        // Process management pour Cancel
-        private Process? _scanProcess;
         private CancellationTokenSource? _scanCts;
         private readonly object _scanLock = new object();
         private bool _cancelHandled;
@@ -664,8 +664,10 @@ namespace PCDiagnosticPro.ViewModels
 
         public MainViewModel()
         {
-            _powerShellService = new PowerShellService();
             _reportParserService = new ReportParserService();
+            _powerShellRunner = new PowerShellRunner();
+            _hardwareProbeService = new VirtualIT.HardwareProbe.HardwareProbeService();
+            _finalSnapshotBuilder = new FinalSnapshotBuilder();
             _scanStopwatch = new Stopwatch();
 
             ArchivedScanHistoryView = CollectionViewSource.GetDefaultView(ArchivedScanHistory);
@@ -679,7 +681,7 @@ namespace PCDiagnosticPro.ViewModels
             _liveFeedTimer.Tick += (s, e) => UpdateElapsedTime();
 
             // Initialiser les chemins relatifs
-            _scriptPath = Path.Combine(_baseDir, "Scripts", "Total_PS_PC_Scan.ps1");
+            _scriptPath = ResolveScriptPath();
             _reportsDir = Path.Combine(_baseDir, "Rapports");
             _resultJsonPath = Path.Combine(_reportsDir, "scan_result.json");
             _configPath = Path.Combine(_baseDir, "config.json");
@@ -727,9 +729,17 @@ namespace PCDiagnosticPro.ViewModels
             ArchivedScanHistory.CollectionChanged += OnHistoryCollectionChanged;
 
             // S'abonner aux événements
-            _powerShellService.OutputReceived += OnOutputReceived;
-            _powerShellService.ProgressChanged += OnProgressChanged;
-            _powerShellService.StepChanged += OnStepChanged;
+            _powerShellRunner.OutputReceived += line =>
+            {
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    ProcessOutputLine(line);
+                });
+            };
+            _powerShellRunner.ErrorReceived += line =>
+            {
+                App.LogMessage($"ERREUR PS: {line}");
+            };
 
             if (!IsAdmin)
             {
@@ -743,11 +753,23 @@ namespace PCDiagnosticPro.ViewModels
 
         #region Methods
 
+        private string ResolveScriptPath()
+        {
+            var primary = Path.Combine(_baseDir, "Total_PS_PC_Scan_v7.0.ps1");
+            if (File.Exists(primary))
+            {
+                return primary;
+            }
+
+            var fallback = Path.Combine(_baseDir, "Scripts", "Total_PS_PC_Scan.ps1");
+            return fallback;
+        }
+
         private async Task StartScanAsync()
         {
             lock (_scanLock)
             {
-                if (_scanProcess != null && !_scanProcess.HasExited)
+                if (_scanCts != null && !_scanCts.IsCancellationRequested)
                 {
                     App.LogMessage("Scan déjà en cours");
                     return;
@@ -823,64 +845,28 @@ namespace PCDiagnosticPro.ViewModels
                 // Créer CancellationTokenSource
                 _scanCts = new CancellationTokenSource();
 
-                var outputBuilder = new StringBuilder();
-                var errorBuilder = new StringBuilder();
+                var runResult = await _powerShellRunner.RunAsync(
+                    _scriptPath,
+                    $"-OutputDir \"{outputDir}\"",
+                    TimeSpan.FromMinutes(10),
+                    _scanCts.Token);
 
-                // Lancer le processus PowerShell
-                var startInfo = new ProcessStartInfo
+                if (_scanCts.IsCancellationRequested)
                 {
-                    FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{_scriptPath}\" -OutputDir \"{outputDir}\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    StandardOutputEncoding = Encoding.UTF8,
-                    StandardErrorEncoding = Encoding.UTF8
-                };
-
-                _scanProcess = new Process { StartInfo = startInfo };
-                _scanProcess.EnableRaisingEvents = true;
-
-                // CORRECTION: Utiliser les événements DataReceived au lieu de ReadLineAsync
-                _scanProcess.OutputDataReceived += (sender, e) =>
-                {
-                    if (string.IsNullOrEmpty(e.Data)) return;
-                    
-                    Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        outputBuilder.AppendLine(e.Data);
-                        ProcessOutputLine(e.Data);
-                    });
-                };
-
-                _scanProcess.ErrorDataReceived += (sender, e) =>
-                {
-                    if (!string.IsNullOrEmpty(e.Data))
-                    {
-                        Application.Current?.Dispatcher.Invoke(() =>
-                        {
-                            errorBuilder.AppendLine(e.Data);
-                            App.LogMessage($"ERREUR PS: {e.Data}");
-                        });
-                    }
-                };
-
-                _scanProcess.Start();
-                _scanProcess.BeginOutputReadLine();
-                _scanProcess.BeginErrorReadLine();
-
-                // Attendre la fin du processus
-                await _scanProcess.WaitForExitAsync(_scanCts.Token);
+                    throw new OperationCanceledException();
+                }
 
                 _scanStopwatch.Stop();
                 _liveFeedTimer.Stop();
 
-                var exitCode = _scanProcess.ExitCode;
-
-                if (exitCode != 0 && errorBuilder.Length > 0)
+                if (runResult.TimedOut)
                 {
-                    App.LogMessage($"Script terminé avec erreur: {errorBuilder}");
+                    App.LogMessage("Timeout atteint, arrêt du script");
+                }
+
+                if (runResult.ExitCode != 0 && !string.IsNullOrWhiteSpace(runResult.Error))
+                {
+                    App.LogMessage($"Script terminé avec erreur: {runResult.Error}");
                 }
 
                 AddLiveFeedItem("✅ Scan terminé");
@@ -889,6 +875,20 @@ namespace PCDiagnosticPro.ViewModels
                 if (File.Exists(_resultJsonPath))
                 {
                     await LoadJsonResultAsync();
+
+                    try
+                    {
+                        var hardwareSnapshot = _hardwareProbeService.CollectSnapshot();
+                        var finalPath = await _finalSnapshotBuilder.BuildAsync(
+                            _resultJsonPath,
+                            hardwareSnapshot,
+                            outputDir);
+                        App.LogMessage($"Snapshot final généré: {finalPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        App.LogMessage($"Erreur génération snapshot final: {ex.Message}");
+                    }
                 }
                 else
                 {
@@ -919,8 +919,6 @@ namespace PCDiagnosticPro.ViewModels
             {
                 lock (_scanLock)
                 {
-                    _scanProcess?.Dispose();
-                    _scanProcess = null;
                     _scanCts?.Dispose();
                     _scanCts = null;
                 }
@@ -1093,17 +1091,7 @@ namespace PCDiagnosticPro.ViewModels
                     _scanCts?.Cancel();
 
                     // Tuer le processus si encore actif
-                    if (_scanProcess != null && !_scanProcess.HasExited)
-                    {
-                        try
-                        {
-                            _scanProcess.Kill(true);
-                        }
-                        catch (Exception ex)
-                        {
-                            App.LogMessage($"Erreur kill process: {ex.Message}");
-                        }
-                    }
+                    _powerShellRunner.Cancel();
                 }
 
                 if (!_cancelHandled)
@@ -1433,26 +1421,6 @@ namespace PCDiagnosticPro.ViewModels
                 CurrentStep = GetString("ReadyToScan");
                 StatusMessage = IsAdmin ? GetString("StatusReady") : GetString("AdminRequiredWarning");
             }
-        }
-
-
-        private void OnOutputReceived(string output)
-        {
-            Application.Current?.Dispatcher.Invoke(() => AddLiveFeedItem(output));
-        }
-
-        private void OnProgressChanged(int progress)
-        {
-            Application.Current?.Dispatcher.Invoke(() => Progress = progress);
-        }
-
-        private void OnStepChanged(string step)
-        {
-            Application.Current?.Dispatcher.Invoke(() =>
-            {
-                CurrentStep = step;
-                AddLiveFeedItem($"📍 {step}");
-            });
         }
 
         private void AddLiveFeedItem(string item)
